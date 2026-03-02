@@ -1,9 +1,15 @@
 services:
   postgres:
-    image: 'postgres:latest'
+    image: 'postgres:17'
+    container_name: solar-erp-postgres
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_DB: solar_erp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - '5432'
+      - '5432:5432'
+    volumes:
+      - solar-erp-pgdata:/var/lib/postgresql/data
+
+volumes:
+  solar-erp-pgdata:
