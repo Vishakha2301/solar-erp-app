@@ -14,6 +14,6 @@ INSERT INTO users (username, email, password, role)
 VALUES (
     'admin',
     'admin@solarerp.com',
-    '$2a$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.',
+    '$2a$12$NOUI1Ix4t/fEuwqw5R4F4uUtIqcPlB28cO3XG4Xw/H4CxfsnU7nSy',
     'ADMIN'
 );
