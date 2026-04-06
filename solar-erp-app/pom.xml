@@ -27,6 +27,10 @@
             <groupId>com.solarerp</groupId>
             <artifactId>solar-erp-costing</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.solarerp</groupId>
+            <artifactId>solar-erp-quotation</artifactId>
+        </dependency>
 
         <!-- Web -->
         <dependency>

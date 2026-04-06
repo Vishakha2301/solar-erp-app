@@ -25,6 +25,7 @@
 		<module>solar-erp-common</module>
 		<module>solar-erp-costing</module>
 		<module>solar-erp-app</module>
+		<module>solar-erp-quotation</module>
 	</modules>
 
 	<properties>
@@ -56,6 +57,11 @@
 			<dependency>
 				<groupId>com.solarerp</groupId>
 				<artifactId>solar-erp-costing</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.solarerp</groupId>
+				<artifactId>solar-erp-quotation</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 

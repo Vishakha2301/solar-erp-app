@@ -1,5 +1,6 @@
 package com.solarerp.material.service.impl;
 
+import com.solarerp.material.dto.MaterialCategoryResponse;
 import com.solarerp.material.dto.MaterialRequest;
 import com.solarerp.material.dto.MaterialResponse;
 import com.solarerp.material.entity.Material;
@@ -113,8 +114,10 @@ public class MaterialServiceImpl implements MaterialService {
     private MaterialResponse toResponse(Material material) {
         return new MaterialResponse(
                 material.getId(),
-                material.getCategory(),
-                CATEGORY_LABELS.getOrDefault(material.getCategory(), "Other"),
+                new MaterialCategoryResponse(
+                        material.getCategory().name(),
+                        CATEGORY_LABELS.getOrDefault(material.getCategory(), "Other")
+                ),
                 material.getComponentKey(),
                 material.getBrandName(),
                 material.getModelName(),
