@@ -1,4 +1,4 @@
-CREATE TYPE customer_type AS ENUM ('INDIVIDUAL', 'COMPANY');
+CREATE TYPE customer_type AS ENUM ('INDIVIDUAL', 'COMPANY', 'SOCIETY');
 
 CREATE TABLE customers (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
