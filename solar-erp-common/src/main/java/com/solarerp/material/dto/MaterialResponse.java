@@ -7,6 +7,7 @@ import java.util.UUID;
 public record MaterialResponse(
         UUID id,
         MaterialCategory category,
+        String categoryLabel,
         String componentKey,
         String brandName,
         String modelName,
