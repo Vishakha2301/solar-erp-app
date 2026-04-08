@@ -144,11 +144,14 @@ public class QuotationServiceImpl implements QuotationService {
                     HttpStatus.FORBIDDEN, "Only the creator can submit this quotation");
         }
 
-        quotation.setStatus(QuotationStatus.SUBMITTED);
-        quotation.setSubmittedAt(Instant.now());
+        // If previously rejected, mark as REVISED instead of SUBMITTED
         if (quotation.getStatus() == QuotationStatus.REJECTED) {
             quotation.setStatus(QuotationStatus.REVISED);
+        } else {
+            quotation.setStatus(QuotationStatus.SUBMITTED);
         }
+        quotation.setSubmittedAt(Instant.now());
+        quotation.setRejectionReason(null);
 
         return toResponse(quotationRepository.save(quotation));
     }
