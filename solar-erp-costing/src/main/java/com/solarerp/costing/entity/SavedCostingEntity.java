@@ -1,6 +1,9 @@
 package com.solarerp.costing.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -9,6 +12,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "saved_costings")
+@Getter
+@Setter
+@NoArgsConstructor
 public class SavedCostingEntity {
 
     @Id
@@ -34,16 +40,4 @@ public class SavedCostingEntity {
         createdAt = Instant.now();
     }
 
-    public UUID getId() { return id; }
-
-    public Instant getCreatedAt() { return createdAt; }
-
-    public UUID getCreatedBy() { return createdBy; }
-    public void setCreatedBy(UUID createdBy) { this.createdBy = createdBy; }
-
-    public String getContext() { return context; }
-    public void setContext(String context) { this.context = context; }
-
-    public String getSnapshot() { return snapshot; }
-    public void setSnapshot(String snapshot) { this.snapshot = snapshot; }
 }
