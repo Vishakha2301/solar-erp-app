@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.Year;
 import java.util.List;
@@ -251,6 +252,9 @@ public class QuotationServiceImpl implements QuotationService {
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "Costing not found: " + costingReq.costingId())));
             qc.setRoofLabel(costingReq.roofLabel());
+            qc.setSubsidyAmount(costingReq.subsidyAmount() != null
+                    ? costingReq.subsidyAmount()
+                    : BigDecimal.ZERO);
             quotation.getCostings().add(qc);
         });
     }
@@ -318,7 +322,8 @@ public class QuotationServiceImpl implements QuotationService {
                         .map(qc -> new QuotationCostingResponse(
                                 qc.getId(),
                                 qc.getCosting().getId(),
-                                qc.getRoofLabel()))
+                                qc.getRoofLabel(),
+                                qc.getSubsidyAmount()))
                         .toList(),
                 quotation.getInstalments().stream()
                         .map(inst -> new QuotationInstalmentResponse(

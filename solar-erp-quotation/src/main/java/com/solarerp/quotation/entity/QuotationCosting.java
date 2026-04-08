@@ -3,6 +3,7 @@ package com.solarerp.quotation.entity;
 import com.solarerp.costing.entity.SavedCostingEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -26,4 +27,7 @@ public class QuotationCosting {
 
     @Column(name = "roof_label", length = 255)
     private String roofLabel;
+
+    @Column(name = "subsidy_amount", precision = 12, scale = 2)
+    private BigDecimal subsidyAmount = BigDecimal.ZERO;
 }
