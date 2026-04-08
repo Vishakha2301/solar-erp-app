@@ -3,9 +3,14 @@ package com.solarerp.quotation.controller;
 import com.solarerp.quotation.dto.QuotationRequest;
 import com.solarerp.quotation.dto.QuotationResponse;
 import com.solarerp.quotation.entity.QuotationStatus;
+import com.solarerp.quotation.service.QuotationDocumentService;
 import com.solarerp.quotation.service.QuotationService;
 import jakarta.validation.Valid;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +23,13 @@ import java.util.UUID;
 public class QuotationController {
 
     private final QuotationService quotationService;
+    private final QuotationDocumentService quotationDocumentService;
 
-    public QuotationController(QuotationService quotationService) {
+    public QuotationController(
+            QuotationService quotationService,
+            QuotationDocumentService quotationDocumentService) {
         this.quotationService = quotationService;
+        this.quotationDocumentService = quotationDocumentService;
     }
 
     @GetMapping
@@ -85,5 +94,21 @@ public class QuotationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
         quotationService.delete(id);
+    }
+
+    @GetMapping("/{id}/document")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable UUID id) {
+        byte[] document = quotationDocumentService.generateDocx(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename("quotation-" + id + ".docx")
+                .build());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(document);
     }
 }
