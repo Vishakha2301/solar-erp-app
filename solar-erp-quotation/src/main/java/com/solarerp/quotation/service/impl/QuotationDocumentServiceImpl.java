@@ -8,6 +8,7 @@ import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.QuotationDocumentService;
 import com.solarerp.costing.entity.SavedCostingEntity;
 import com.solarerp.costing.repository.CostingRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public byte[] generateDocx(UUID quotationId) {
         Quotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResponseStatusException(
