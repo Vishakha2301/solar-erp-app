@@ -160,9 +160,11 @@ public class QuotationServiceImpl implements QuotationService {
     public QuotationResponse approve(UUID id, String approvalNotes, UUID userId) {
         Quotation quotation = findOrThrow(id);
 
-        if (quotation.getStatus() != QuotationStatus.SUBMITTED) {
+        if (quotation.getStatus() != QuotationStatus.SUBMITTED &&
+                quotation.getStatus() != QuotationStatus.REVISED) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Only SUBMITTED quotations can be approved");
+                    HttpStatus.BAD_REQUEST,
+                    "Only SUBMITTED or REVISED quotations can be approved");
         }
 
         quotation.setStatus(QuotationStatus.APPROVED);
@@ -177,9 +179,11 @@ public class QuotationServiceImpl implements QuotationService {
     public QuotationResponse reject(UUID id, String rejectionReason, UUID userId) {
         Quotation quotation = findOrThrow(id);
 
-        if (quotation.getStatus() != QuotationStatus.SUBMITTED) {
+        if (quotation.getStatus() != QuotationStatus.SUBMITTED &&
+                quotation.getStatus() != QuotationStatus.REVISED) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Only SUBMITTED quotations can be rejected");
+                    HttpStatus.BAD_REQUEST,
+                    "Only SUBMITTED or REVISED quotations can be rejected");
         }
 
         if (rejectionReason == null || rejectionReason.isBlank()) {
