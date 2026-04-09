@@ -1,21 +1,23 @@
 package com.solarerp.quotation.service.impl;
 
+import com.solarerp.costing.dto.CostingContextDto;
+import com.solarerp.costing.dto.CostingSnapshotDto;
+import com.solarerp.costing.entity.SavedCostingEntity;
+import com.solarerp.costing.repository.CostingRepository;
+import com.solarerp.costing.service.CostingService;
 import com.solarerp.quotation.entity.Quotation;
 import com.solarerp.quotation.entity.QuotationCosting;
 import com.solarerp.quotation.entity.QuotationInstalment;
 import com.solarerp.quotation.entity.QuotationPackageMaterial;
 import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.QuotationDocumentService;
-import com.solarerp.costing.entity.SavedCostingEntity;
-import com.solarerp.costing.repository.CostingRepository;
-import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -29,24 +31,29 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
 
     private final QuotationRepository quotationRepository;
     private final CostingRepository costingRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final CostingService costingService;
+    private final ObjectMapper objectMapper;
 
     public QuotationDocumentServiceImpl(
             QuotationRepository quotationRepository,
-            CostingRepository costingRepository) {
+            CostingRepository costingRepository,
+            CostingService costingService,
+            ObjectMapper objectMapper) {
         this.quotationRepository = quotationRepository;
         this.costingRepository = costingRepository;
+        this.costingService = costingService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public byte[] generateDocx(UUID quotationId) {
         Quotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Quotation not found: " + quotationId));
+                        HttpStatus.NOT_FOUND,
+                        "Quotation not found: " + quotationId));
         try {
             ClassPathResource resource =
-                    new ClassPathResource("templates/quotation_template.docx");
+                new ClassPathResource("templates/quotation-template.docx");
 
             try (InputStream is = resource.getInputStream();
                  XWPFDocument doc = new XWPFDocument(is)) {
@@ -62,17 +69,49 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
             throw e;
         } catch (Exception e) {
             throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to generate document: " + e.getMessage());
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Failed to generate document: " + e.getMessage());
         }
     }
 
     private Map<String, String> buildPlaceholders(Quotation quotation) {
         Map<String, String> map = new LinkedHashMap<>();
 
+        // Resolve system details from first costing context
+        String systemDetails = quotation.getSystemType() != null
+                ? quotation.getSystemType() : "";
+
+        // Commercial details — aggregate from all costings
+        BigDecimal totalGrandTotal = BigDecimal.ZERO;
+        BigDecimal totalSubsidy = BigDecimal.ZERO;
+
+        for (QuotationCosting qc : quotation.getCostings()) {
+            SavedCostingEntity costing = costingRepository
+                    .findById(qc.getCosting().getId())
+                    .orElse(null);
+            if (costing != null) {
+                // Use typed DTO via CostingService
+                var response = costingService.getById(costing.getId());
+
+                CostingSnapshotDto snapshot = response.snapshot();
+                CostingContextDto context = response.context();
+
+                totalGrandTotal = totalGrandTotal.add(
+                        BigDecimal.valueOf(snapshot.grandTotal()));
+
+                // Derive system details from costing context if not set
+                if (systemDetails.isEmpty() && context != null) {
+                    systemDetails = context.systemType() + " "
+                            + context.plantCapacity() + "KW";
+                }
+            }
+            if (qc.getSubsidyAmount() != null) {
+                totalSubsidy = totalSubsidy.add(qc.getSubsidyAmount());
+            }
+        }
+
         // Cover page
-        map.put("{{system_details}}", quotation.getSystemType() != null
-                ? quotation.getSystemType() : "");
+        map.put("{{system_details}}", systemDetails);
         map.put("{{date}}", LocalDate.now()
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         map.put("{{quotation_no}}", quotation.getQuotationNumber());
@@ -120,27 +159,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
         map.put("{{cable_brand}}", cableBrand);
         map.put("{{warranty}}", panelWarranty);
 
-        // Commercial details
-        BigDecimal totalGrandTotal = BigDecimal.ZERO;
-        BigDecimal totalSubsidy = BigDecimal.ZERO;
-
-        for (QuotationCosting qc : quotation.getCostings()) {
-            SavedCostingEntity costing = costingRepository
-                    .findById(qc.getCosting().getId())
-                    .orElse(null);
-            if (costing != null && costing.getSnapshot() != null) {
-                Map<String, Object> snapshotMap = parseSnapshot(costing.getSnapshot());
-                Object grandTotal = snapshotMap.get("grandTotal");
-                if (grandTotal instanceof Number n) {
-                    totalGrandTotal = totalGrandTotal.add(
-                            BigDecimal.valueOf(n.doubleValue()));
-                }
-            }
-            if (qc.getSubsidyAmount() != null) {
-                totalSubsidy = totalSubsidy.add(qc.getSubsidyAmount());
-            }
-        }
-
+        // GST calculation
         BigDecimal gstRate = new BigDecimal("0.089");
         BigDecimal costWithoutGst = totalGrandTotal
                 .divide(BigDecimal.ONE.add(gstRate), 2, RoundingMode.HALF_UP);
@@ -173,7 +192,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
     }
 
     private void replacePlaceholders(XWPFDocument doc,
-                                     Map<String, String> placeholders) {
+                                      Map<String, String> placeholders) {
         for (XWPFParagraph para : doc.getParagraphs()) {
             replaceParagraph(para, placeholders);
         }
@@ -202,7 +221,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
     }
 
     private void replaceParagraph(XWPFParagraph para,
-                                  Map<String, String> placeholders) {
+                                   Map<String, String> placeholders) {
         String fullText = para.getText();
         if (fullText == null || fullText.isEmpty()) return;
 
@@ -250,7 +269,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
     }
 
     private String buildAddressString(String address, String city,
-                                      String state, String pincode) {
+                                       String state, String pincode) {
         StringBuilder sb = new StringBuilder();
         if (address != null) sb.append(address);
         if (city != null) sb.append(", ").append(city);
@@ -302,17 +321,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
             return convertToWords(number / 100000) + " Lakh" +
                     (number % 100000 != 0 ? " " + convertToWords(number % 100000) : "");
         return convertToWords(number / 10000000) + " Crore" +
-                (number % 10000000 != 0 ? " " + convertToWords(number % 10000000) : "");
-    }
-
-    private Map<String, Object> parseSnapshot(String json) {
-        try {
-            return objectMapper.readValue(
-                    json,
-                    new TypeReference<Map<String, Object>>() {}
-            );
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid snapshot JSON", e);
-        }
+                (number % 10000000 != 0
+                        ? " " + convertToWords(number % 10000000) : "");
     }
 }
