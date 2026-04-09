@@ -7,6 +7,6 @@ public record SavedCostingResponse(
         UUID id,
         Instant createdAt,
         UUID createdBy,
-        Object context,
-        Object snapshot
+        CostingContextDto context,
+        CostingSnapshotDto snapshot
 ) {}
