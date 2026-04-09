@@ -8,10 +8,11 @@ import com.solarerp.costing.dto.SavedCostingResponse;
 import com.solarerp.costing.entity.SavedCostingEntity;
 import com.solarerp.costing.repository.CostingRepository;
 import com.solarerp.costing.service.CostingService;
-import org.springframework.http.HttpStatus;
+import com.solarerp.exception.BadRequestException;
+import com.solarerp.exception.ForbiddenException;
+import com.solarerp.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -71,14 +72,13 @@ public class CostingServiceImpl implements CostingService {
 
     private SavedCostingEntity findOrThrow(UUID id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Costing not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Costing", id));
     }
 
     private void checkOwnership(SavedCostingEntity entity, UUID userId) {
         if (!entity.getCreatedBy().equals(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
+            throw new ForbiddenException(
                     "You do not have permission to modify this costing");
         }
     }
@@ -97,8 +97,7 @@ public class CostingServiceImpl implements CostingService {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (Exception e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Invalid JSON in request");
+            throw new BadRequestException("Invalid JSON in request");
         }
     }
 
@@ -106,9 +105,9 @@ public class CostingServiceImpl implements CostingService {
         try {
             return objectMapper.readValue(json, type);
         } catch (Exception e) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
+            throw new BadRequestException(
                     "Corrupt stored JSON: " + e.getMessage());
         }
     }
 }
+
