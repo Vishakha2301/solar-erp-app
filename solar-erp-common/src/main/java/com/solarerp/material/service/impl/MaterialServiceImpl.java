@@ -94,6 +94,16 @@ public class MaterialServiceImpl implements MaterialService {
         repository.save(material);
     }
 
+    @Override
+    public List<MaterialCategoryResponse> getCategories() {
+        return Arrays.stream(MaterialCategory.values())
+                .map(c -> new MaterialCategoryResponse(
+                        c.name(),
+                        CATEGORY_LABELS.getOrDefault(c, c.name())))
+                .toList();
+    }
+    
+
     private Material findOrThrow(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
