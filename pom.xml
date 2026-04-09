@@ -1,99 +1,188 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
              https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.3</version>
-		<relativePath/>
-	</parent>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.3</version>
+        <relativePath/>
+    </parent>
 
-	<groupId>com.solarerp</groupId>
-	<artifactId>solar-erp</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>solar-erp</name>
-	<description>Solar ERP Backend - Parent</description>
+    <groupId>com.solarerp</groupId>
+    <artifactId>solar-erp</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>solar-erp</name>
+    <description>Solar ERP Backend - Parent</description>
 
-	<!-- Child modules -->
-	<modules>
-		<module>solar-erp-common</module>
-		<module>solar-erp-costing</module>
-		<module>solar-erp-app</module>
-		<module>solar-erp-quotation</module>
-	</modules>
+    <modules>
+        <module>solar-erp-common</module>
+        <module>solar-erp-costing</module>
+        <module>solar-erp-quotation</module>
+        <module>solar-erp-app</module>
+    </modules>
 
-	<properties>
-		<java.version>21</java.version>
-		<spring-modulith.version>2.0.3</spring-modulith.version>
-	</properties>
-	<!--
-        dependencyManagement: declares versions for all shared dependencies.
-        Child modules inherit these versions — they never need to specify a version themselves.
-    -->
-	<dependencyManagement>
-		<dependencies>
+    <properties>
+        <java.version>21</java.version>
+        <spring-modulith.version>2.0.3</spring-modulith.version>
+        <sonar.projectKey>solar-erp</sonar.projectKey>
+        <sonar.projectName>Solar ERP</sonar.projectName>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.build.directory}/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.exclusions>
+            **/entity/**,
+            **/dto/**,
+            **/exception/**,
+            **/*Application.java,
+            **/config/**
+        </sonar.exclusions>
+    </properties>
 
-			<!-- Spring Modulith BOM -->
-			<dependency>
-				<groupId>org.springframework.modulith</groupId>
-				<artifactId>spring-modulith-bom</artifactId>
-				<version>${spring-modulith.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+    <dependencyManagement>
+        <dependencies>
 
-			<!-- Internal modules — version managed here so children just declare groupId + artifactId -->
-			<dependency>
-				<groupId>com.solarerp</groupId>
-				<artifactId>solar-erp-common</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.solarerp</groupId>
-				<artifactId>solar-erp-costing</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.solarerp</groupId>
-				<artifactId>solar-erp-quotation</artifactId>
-				<version>${project.version}</version>
-			</dependency>
+            <!-- Spring Modulith BOM -->
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-bom</artifactId>
+                <version>${spring-modulith.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
-		</dependencies>
-	</dependencyManagement>
+            <!-- Testcontainers BOM -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>1.19.8</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
-	<!--
-        dependencies: these are inherited by ALL child modules automatically.
-        Only put things every module needs here.
-    -->
-	<dependencies>
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>com.solarerp</groupId>
+                <artifactId>solar-erp-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.solarerp</groupId>
+                <artifactId>solar-erp-costing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.solarerp</groupId>
+                <artifactId>solar-erp-quotation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-		<!-- Validation — every module validates its inputs -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
+        </dependencies>
+    </dependencyManagement>
 
-		<!-- Test — every module has tests -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependencies>
 
-		<!-- Lombok — compile-time code generation for all modules -->
-    <dependency>
-        <groupId>org.projectlombok</groupId>
-        <artifactId>lombok</artifactId>
-        <optional>true</optional>
-    </dependency>
+        <!-- Validation — every module validates its inputs -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
 
-	</dependencies>
+        <!-- Lombok — compile-time code generation for all modules -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test — every module has tests -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- JaCoCo Coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <excludes>
+                                <exclude>**/entity/**</exclude>
+                                <exclude>**/dto/**</exclude>
+                                <exclude>**/exception/**</exclude>
+                                <exclude>**/*Application.class</exclude>
+                                <exclude>**/config/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- SonarQube -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.11.0.3922</version>
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>
