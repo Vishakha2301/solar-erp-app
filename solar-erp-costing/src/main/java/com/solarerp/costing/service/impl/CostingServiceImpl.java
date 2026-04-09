@@ -1,6 +1,8 @@
 package com.solarerp.costing.service.impl;
 
 import tools.jackson.databind.ObjectMapper;
+import com.solarerp.costing.dto.CostingContextDto;
+import com.solarerp.costing.dto.CostingSnapshotDto;
 import com.solarerp.costing.dto.SavedCostingRequest;
 import com.solarerp.costing.dto.SavedCostingResponse;
 import com.solarerp.costing.entity.SavedCostingEntity;
@@ -21,7 +23,8 @@ public class CostingServiceImpl implements CostingService {
     private final CostingRepository repository;
     private final ObjectMapper objectMapper;
 
-    public CostingServiceImpl(CostingRepository repository, ObjectMapper objectMapper) {
+    public CostingServiceImpl(CostingRepository repository,
+                               ObjectMapper objectMapper) {
         this.repository = repository;
         this.objectMapper = objectMapper;
     }
@@ -40,7 +43,8 @@ public class CostingServiceImpl implements CostingService {
     }
 
     @Override
-    public SavedCostingResponse create(SavedCostingRequest request, UUID userId) {
+    public SavedCostingResponse create(SavedCostingRequest request,
+                                        UUID userId) {
         SavedCostingEntity entity = new SavedCostingEntity();
         entity.setCreatedBy(userId);
         entity.setContext(toJson(request.context()));
@@ -49,7 +53,8 @@ public class CostingServiceImpl implements CostingService {
     }
 
     @Override
-    public SavedCostingResponse update(UUID id, SavedCostingRequest request, UUID userId) {
+    public SavedCostingResponse update(UUID id, SavedCostingRequest request,
+                                        UUID userId) {
         SavedCostingEntity entity = findOrThrow(id);
         checkOwnership(entity, userId);
         entity.setContext(toJson(request.context()));
@@ -73,7 +78,8 @@ public class CostingServiceImpl implements CostingService {
     private void checkOwnership(SavedCostingEntity entity, UUID userId) {
         if (!entity.getCreatedBy().equals(userId)) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "You do not have permission to modify this costing");
+                    HttpStatus.FORBIDDEN,
+                    "You do not have permission to modify this costing");
         }
     }
 
@@ -82,8 +88,8 @@ public class CostingServiceImpl implements CostingService {
                 entity.getId(),
                 entity.getCreatedAt(),
                 entity.getCreatedBy(),
-                fromJson(entity.getContext()),
-                fromJson(entity.getSnapshot())
+                fromJson(entity.getContext(), CostingContextDto.class),
+                fromJson(entity.getSnapshot(), CostingSnapshotDto.class)
         );
     }
 
@@ -91,15 +97,18 @@ public class CostingServiceImpl implements CostingService {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid JSON in request");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Invalid JSON in request");
         }
     }
 
-    private Object fromJson(String json) {
+    private <T> T fromJson(String json, Class<T> type) {
         try {
-            return objectMapper.readTree(json);
+            return objectMapper.readValue(json, type);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Corrupt stored JSON");
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Corrupt stored JSON: " + e.getMessage());
         }
     }
 }
