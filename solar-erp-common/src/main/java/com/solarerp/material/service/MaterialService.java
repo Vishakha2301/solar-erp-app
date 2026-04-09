@@ -1,5 +1,6 @@
 package com.solarerp.material.service;
 
+import com.solarerp.material.dto.MaterialCategoryResponse;
 import com.solarerp.material.dto.MaterialRequest;
 import com.solarerp.material.dto.MaterialResponse;
 import com.solarerp.material.entity.MaterialCategory;
@@ -19,9 +20,12 @@ public interface MaterialService {
 
     List<MaterialResponse> search(String brandName);
 
+    List<MaterialCategoryResponse> getCategories();
+
     MaterialResponse create(MaterialRequest request, UUID userId);
 
     MaterialResponse update(UUID id, MaterialRequest request);
 
     void deactivate(UUID id);
 }
+
