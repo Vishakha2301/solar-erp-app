@@ -9,6 +9,7 @@ import com.solarerp.customer.repository.CustomerRepository;
 import com.solarerp.material.dto.MaterialResponse;
 import com.solarerp.material.entity.Material;
 import com.solarerp.material.repository.MaterialRepository;
+import com.solarerp.material.service.MaterialService;
 import com.solarerp.quotation.dto.*;
 import com.solarerp.quotation.entity.*;
 import com.solarerp.quotation.repository.QuotationRepository;
@@ -32,17 +33,21 @@ public class QuotationServiceImpl implements QuotationService {
     private final CustomerRepository customerRepository;
     private final CostingRepository costingRepository;
     private final MaterialRepository materialRepository;
+    private final MaterialService materialService;
 
     public QuotationServiceImpl(
             QuotationRepository quotationRepository,
             CustomerRepository customerRepository,
             CostingRepository costingRepository,
-            MaterialRepository materialRepository) {
+            MaterialRepository materialRepository,
+            MaterialService materialService) {
         this.quotationRepository = quotationRepository;
         this.customerRepository = customerRepository;
         this.costingRepository = costingRepository;
         this.materialRepository = materialRepository;
+        this.materialService = materialService;
     }
+
 
     @Override
     public List<QuotationResponse> getAll() {
@@ -384,22 +389,7 @@ public class QuotationServiceImpl implements QuotationService {
     }
 
     private MaterialResponse toMaterialResponse(Material material) {
-        return new MaterialResponse(
-                material.getId(),
-                new com.solarerp.material.dto.MaterialCategoryResponse(
-                        material.getCategory().name(),
-                        material.getCategory().name()
-                ),
-                material.getComponentKey(),
-                material.getBrandName(),
-                material.getModelName(),
-                material.getSpecification(),
-                material.getUnit(),
-                material.getWarranty(),
-                material.getHsnCode(),
-                material.isActive(),
-                material.getCreatedAt(),
-                material.getCreatedBy()
-        );
+        return materialService.getById(material.getId());
     }
+
 }
