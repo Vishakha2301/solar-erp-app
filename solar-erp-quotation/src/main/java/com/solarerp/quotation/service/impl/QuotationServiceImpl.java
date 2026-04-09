@@ -6,18 +6,19 @@ import com.solarerp.customer.dto.CustomerSiteResponse;
 import com.solarerp.customer.entity.Customer;
 import com.solarerp.customer.entity.CustomerSite;
 import com.solarerp.customer.repository.CustomerRepository;
+import com.solarerp.exception.BadRequestException;
+import com.solarerp.exception.ForbiddenException;
+import com.solarerp.exception.ResourceNotFoundException;
+import com.solarerp.material.service.MaterialService;
 import com.solarerp.material.dto.MaterialResponse;
 import com.solarerp.material.entity.Material;
 import com.solarerp.material.repository.MaterialRepository;
-import com.solarerp.material.service.MaterialService;
 import com.solarerp.quotation.dto.*;
 import com.solarerp.quotation.entity.*;
 import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.QuotationService;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -48,7 +49,6 @@ public class QuotationServiceImpl implements QuotationService {
         this.materialService = materialService;
     }
 
-
     @Override
     public List<QuotationResponse> getAll() {
         return quotationRepository.findAllByOrderByCreatedAtDesc()
@@ -72,7 +72,8 @@ public class QuotationServiceImpl implements QuotationService {
 
     @Override
     public List<QuotationResponse> getByCustomer(UUID customerId) {
-        return quotationRepository.findByCustomerIdOrderByCreatedAtDesc(customerId)
+        return quotationRepository
+                .findByCustomerIdOrderByCreatedAtDesc(customerId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -81,8 +82,8 @@ public class QuotationServiceImpl implements QuotationService {
     @Override
     public QuotationResponse create(QuotationRequest request, UUID userId) {
         Customer customer = customerRepository.findById(request.customerId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer", request.customerId()));
 
         Quotation quotation = new Quotation();
         quotation.setQuotationNumber(generateQuotationNumber());
@@ -93,8 +94,8 @@ public class QuotationServiceImpl implements QuotationService {
             CustomerSite site = customer.getSites().stream()
                     .filter(s -> s.getId().equals(request.customerSiteId()))
                     .findFirst()
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "Customer site not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Customer site", request.customerSiteId()));
             quotation.setCustomerSite(site);
         }
 
@@ -112,14 +113,13 @@ public class QuotationServiceImpl implements QuotationService {
 
         if (quotation.getStatus() != QuotationStatus.DRAFT &&
                 quotation.getStatus() != QuotationStatus.REJECTED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new BadRequestException(
                     "Only DRAFT or REJECTED quotations can be edited");
         }
 
         Customer customer = customerRepository.findById(request.customerId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer", request.customerId()));
 
         quotation.setCustomer(customer);
         mapRequestToEntity(request, quotation);
@@ -141,16 +141,15 @@ public class QuotationServiceImpl implements QuotationService {
 
         if (quotation.getStatus() != QuotationStatus.DRAFT &&
                 quotation.getStatus() != QuotationStatus.REJECTED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Only DRAFT or REJECTED quotations can be submitted");
+            throw new BadRequestException(
+                    "Only DRAFT or REJECTED quotations can be submitted");
         }
 
         if (!quotation.getCreatedBy().equals(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Only the creator can submit this quotation");
+            throw new ForbiddenException(
+                    "Only the creator can submit this quotation");
         }
 
-        // If previously rejected, mark as REVISED instead of SUBMITTED
         if (quotation.getStatus() == QuotationStatus.REJECTED) {
             quotation.setStatus(QuotationStatus.REVISED);
         } else {
@@ -163,13 +162,13 @@ public class QuotationServiceImpl implements QuotationService {
     }
 
     @Override
-    public QuotationResponse approve(UUID id, String approvalNotes, UUID userId) {
+    public QuotationResponse approve(UUID id, String approvalNotes,
+                                      UUID userId) {
         Quotation quotation = findOrThrow(id);
 
         if (quotation.getStatus() != QuotationStatus.SUBMITTED &&
                 quotation.getStatus() != QuotationStatus.REVISED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new BadRequestException(
                     "Only SUBMITTED or REVISED quotations can be approved");
         }
 
@@ -182,19 +181,18 @@ public class QuotationServiceImpl implements QuotationService {
     }
 
     @Override
-    public QuotationResponse reject(UUID id, String rejectionReason, UUID userId) {
+    public QuotationResponse reject(UUID id, String rejectionReason,
+                                     UUID userId) {
         Quotation quotation = findOrThrow(id);
 
         if (quotation.getStatus() != QuotationStatus.SUBMITTED &&
                 quotation.getStatus() != QuotationStatus.REVISED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new BadRequestException(
                     "Only SUBMITTED or REVISED quotations can be rejected");
         }
 
         if (rejectionReason == null || rejectionReason.isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Rejection reason is required");
+            throw new BadRequestException("Rejection reason is required");
         }
 
         quotation.setStatus(QuotationStatus.REJECTED);
@@ -210,19 +208,19 @@ public class QuotationServiceImpl implements QuotationService {
         Quotation quotation = findOrThrow(id);
 
         if (quotation.getStatus() != QuotationStatus.DRAFT) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Only DRAFT quotations can be deleted");
+            throw new BadRequestException(
+                    "Only DRAFT quotations can be deleted");
         }
 
         quotationRepository.delete(quotation);
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────
+    // ── Private helpers ───────────────────────────────────────────────
 
     private Quotation findOrThrow(UUID id) {
         return quotationRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Quotation not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Quotation", id));
     }
 
     private String generateQuotationNumber() {
@@ -236,9 +234,11 @@ public class QuotationServiceImpl implements QuotationService {
         return number;
     }
 
-    private void mapRequestToEntity(QuotationRequest request, Quotation quotation) {
+    private void mapRequestToEntity(QuotationRequest request,
+                                     Quotation quotation) {
         quotation.setSystemType(request.systemType());
-        quotation.setValidityDays(request.validityDays() > 0 ? request.validityDays() : 30);
+        quotation.setValidityDays(
+                request.validityDays() > 0 ? request.validityDays() : 30);
         quotation.setDiscount(request.discount());
         quotation.setScopeOfWork(request.scopeOfWork());
         quotation.setPaymentTerms(request.paymentTerms());
@@ -254,17 +254,17 @@ public class QuotationServiceImpl implements QuotationService {
             QuotationCosting qc = new QuotationCosting();
             qc.setQuotation(quotation);
             qc.setCosting(costingRepository.findById(costingReq.costingId())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "Costing not found: " + costingReq.costingId())));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Costing", costingReq.costingId())));
             qc.setRoofLabel(costingReq.roofLabel());
             qc.setSubsidyAmount(costingReq.subsidyAmount() != null
-                    ? costingReq.subsidyAmount()
-                    : BigDecimal.ZERO);
+                    ? costingReq.subsidyAmount() : BigDecimal.ZERO);
             quotation.getCostings().add(qc);
         });
     }
 
-    private void addInstalments(QuotationRequest request, Quotation quotation) {
+    private void addInstalments(QuotationRequest request,
+                                 Quotation quotation) {
         if (request.instalments() == null) return;
         request.instalments().forEach(instReq -> {
             QuotationInstalment inst = new QuotationInstalment();
@@ -284,9 +284,10 @@ public class QuotationServiceImpl implements QuotationService {
             pkg.setPackageName(pkgReq.packageName());
             pkg.setRecommended(pkgReq.isRecommended());
             pkgReq.materials().forEach(matReq -> {
-                Material material = materialRepository.findById(matReq.materialId())
-                        .orElseThrow(() -> new ResponseStatusException(
-                                HttpStatus.NOT_FOUND, "Material not found: " + matReq.materialId()));
+                Material material = materialRepository
+                        .findById(matReq.materialId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Material", matReq.materialId()));
                 QuotationPackageMaterial qpm = new QuotationPackageMaterial();
                 qpm.setQuotationPackage(pkg);
                 qpm.setMaterial(material);
@@ -304,7 +305,8 @@ public class QuotationServiceImpl implements QuotationService {
                 quotation.getQuotationNumber(),
                 toCustomerResponse(quotation.getCustomer()),
                 quotation.getCustomerSite() != null
-                        ? toCustomerSiteResponse(quotation.getCustomerSite()) : null,
+                        ? toCustomerSiteResponse(quotation.getCustomerSite())
+                        : null,
                 quotation.getStatus(),
                 quotation.getSystemType(),
                 quotation.getValidityDays(),
@@ -343,9 +345,11 @@ public class QuotationServiceImpl implements QuotationService {
                                 pkg.getPackageName(),
                                 pkg.isRecommended(),
                                 pkg.getMaterials().stream()
-                                        .map(qpm -> new QuotationPackageMaterialResponse(
+                                        .map(qpm ->
+                                            new QuotationPackageMaterialResponse(
                                                 qpm.getId(),
-                                                toMaterialResponse(qpm.getMaterial()),
+                                                toMaterialResponse(
+                                                    qpm.getMaterial()),
                                                 qpm.getComponentKey(),
                                                 qpm.isRecommended()))
                                         .toList()))
@@ -391,5 +395,4 @@ public class QuotationServiceImpl implements QuotationService {
     private MaterialResponse toMaterialResponse(Material material) {
         return materialService.getById(material.getId());
     }
-
 }
