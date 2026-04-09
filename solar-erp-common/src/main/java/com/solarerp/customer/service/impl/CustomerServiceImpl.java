@@ -7,10 +7,9 @@ import com.solarerp.customer.entity.Customer;
 import com.solarerp.customer.entity.CustomerSite;
 import com.solarerp.customer.repository.CustomerRepository;
 import com.solarerp.customer.service.CustomerService;
-import org.springframework.http.HttpStatus;
+import com.solarerp.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -101,11 +100,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     private Customer findOrThrow(UUID id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Customer not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer", id));
     }
 
-    private void mapRequestToEntity(CustomerRequest request, Customer customer) {
+    private void mapRequestToEntity(CustomerRequest request,
+                                     Customer customer) {
         customer.setCustomerType(request.customerType());
         customer.setName(request.name());
         customer.setCompanyName(request.companyName());
@@ -143,11 +143,4 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.getCity(),
                 customer.getState(),
                 customer.getPincode(),
-                customer.getGstNumber(),
-                customer.isActive(),
-                customer.getCreatedAt(),
-                customer.getCreatedBy(),
-                sites
-        );
-    }
-}
+                customer​​​​​​​​​​​​​​​​
