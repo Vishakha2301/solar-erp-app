@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -52,6 +53,8 @@ class MaterialControllerTest {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(materialController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .setCustomArgumentResolvers(
+                        new AuthenticationPrincipalArgumentResolver())
                 .addFilter((request, response, chain) -> {
                     Jwt jwt = mock(Jwt.class);
                     lenient().when(jwt.getSubject())

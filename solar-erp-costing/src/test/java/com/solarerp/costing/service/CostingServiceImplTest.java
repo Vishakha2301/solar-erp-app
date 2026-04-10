@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.List;
@@ -71,15 +71,20 @@ class CostingServiceImplTest {
         entity.setContext("{\"plantCapacity\":5.0}");
         entity.setSnapshot("{\"grandTotal\":337500.0}");
 
-        // Mock ObjectMapper behavior
-        when(objectMapper.writeValueAsString(contextDto))
+    }
+
+    private void stubWriteJson() throws Exception {
+        lenient().when(objectMapper.writeValueAsString(contextDto))
                 .thenReturn("{\"plantCapacity\":5.0}");
-        when(objectMapper.writeValueAsString(snapshotDto))
+        lenient().when(objectMapper.writeValueAsString(snapshotDto))
                 .thenReturn("{\"grandTotal\":337500.0}");
-        when(objectMapper.readValue(
+    }
+
+    private void stubReadJson() throws Exception {
+        lenient().when(objectMapper.readValue(
                 "{\"plantCapacity\":5.0}", CostingContextDto.class))
                 .thenReturn(contextDto);
-        when(objectMapper.readValue(
+        lenient().when(objectMapper.readValue(
                 "{\"grandTotal\":337500.0}", CostingSnapshotDto.class))
                 .thenReturn(snapshotDto);
     }
@@ -90,7 +95,8 @@ class CostingServiceImplTest {
 
         @Test
         @DisplayName("Returns all costings ordered by createdAt desc")
-        void getAll_returnsAllCostings() {
+        void getAll_returnsAllCostings() throws Exception {
+            stubReadJson();
             when(repository.findAllByOrderByCreatedAtDesc())
                     .thenReturn(List.of(entity));
 
@@ -119,7 +125,8 @@ class CostingServiceImplTest {
 
         @Test
         @DisplayName("Returns costing when found")
-        void getById_existingId_returnsCosting() {
+        void getById_existingId_returnsCosting() throws Exception {
+            stubReadJson();
             when(repository.findById(costingId))
                     .thenReturn(Optional.of(entity));
 
@@ -150,7 +157,9 @@ class CostingServiceImplTest {
 
         @Test
         @DisplayName("Creates costing and returns response")
-        void create_validRequest_returnsResponse() {
+        void create_validRequest_returnsResponse() throws Exception {
+            stubWriteJson();
+            stubReadJson();
             when(repository.save(any())).thenReturn(entity);
 
             SavedCostingResponse result =
@@ -162,7 +171,9 @@ class CostingServiceImplTest {
 
         @Test
         @DisplayName("Sets createdBy from userId")
-        void create_setsCreatedByFromUserId() {
+        void create_setsCreatedByFromUserId() throws Exception {
+            stubWriteJson();
+            stubReadJson();
             when(repository.save(any())).thenAnswer(inv -> {
                 SavedCostingEntity saved = inv.getArgument(0);
                 assertThat(saved.getCreatedBy()).isEqualTo(userId);
@@ -181,7 +192,9 @@ class CostingServiceImplTest {
 
         @Test
         @DisplayName("Updates costing when owner requests")
-        void update_ownerRequest_updatesSuccessfully() {
+        void update_ownerRequest_updatesSuccessfully() throws Exception {
+            stubWriteJson();
+            stubReadJson();
             when(repository.findById(costingId))
                     .thenReturn(Optional.of(entity));
             when(repository.save(any())).thenReturn(entity);

@@ -57,7 +57,7 @@ public class QuotationController {
     public QuotationResponse create(
             @Valid @RequestBody QuotationRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        return quotationService.create(request, UUID.fromString(jwt.getSubject()));
+        return quotationService.create(request, userId(jwt));
     }
 
     @PutMapping("/{id}")
@@ -71,7 +71,7 @@ public class QuotationController {
     public QuotationResponse submit(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
-        return quotationService.submit(id, UUID.fromString(jwt.getSubject()));
+        return quotationService.submit(id, userId(jwt));
     }
 
     @PostMapping("/{id}/approve")
@@ -79,7 +79,7 @@ public class QuotationController {
             @PathVariable UUID id,
             @RequestParam(required = false) String approvalNotes,
             @AuthenticationPrincipal Jwt jwt) {
-        return quotationService.approve(id, approvalNotes, UUID.fromString(jwt.getSubject()));
+        return quotationService.approve(id, approvalNotes, userId(jwt));
     }
 
     @PostMapping("/{id}/reject")
@@ -87,7 +87,7 @@ public class QuotationController {
             @PathVariable UUID id,
             @RequestParam String rejectionReason,
             @AuthenticationPrincipal Jwt jwt) {
-        return quotationService.reject(id, rejectionReason, UUID.fromString(jwt.getSubject()));
+        return quotationService.reject(id, rejectionReason, userId(jwt));
     }
 
     @DeleteMapping("/{id}")
@@ -110,5 +110,12 @@ public class QuotationController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(document);
+    }
+
+    private UUID userId(Jwt jwt) {
+        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
+            return new UUID(0L, 0L);
+        }
+        return UUID.fromString(jwt.getSubject());
     }
 }

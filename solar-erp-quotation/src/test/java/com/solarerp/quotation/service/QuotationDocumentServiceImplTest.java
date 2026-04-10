@@ -149,11 +149,6 @@ class QuotationDocumentServiceImplTest {
         void generateDocx_templateMissing_throwsDocumentGenerationException() {
             when(quotationRepository.findById(quotationId))
                     .thenReturn(Optional.of(quotation));
-            when(costingRepository.findById(any()))
-                    .thenReturn(Optional.of(costingEntity));
-            when(costingService.getById(any()))
-                    .thenReturn(costingResponse);
-
             // Template file doesn't exist in test classpath
             assertThatThrownBy(() ->
                     documentService.generateDocx(quotationId))

@@ -1,6 +1,6 @@
 package com.solarerp.costing.service.impl;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solarerp.costing.dto.CostingContextDto;
 import com.solarerp.costing.dto.CostingSnapshotDto;
 import com.solarerp.costing.dto.SavedCostingRequest;

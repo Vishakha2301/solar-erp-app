@@ -18,9 +18,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -53,12 +60,14 @@ class QuotationControllerTest {
     private UUID userId;
     private QuotationResponse quotationResponse;
     private QuotationRequest quotationRequest;
+    private Jwt jwtPrincipal;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(quotationController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .setCustomArgumentResolvers(jwtArgumentResolver())
                 .build();
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
@@ -115,6 +124,27 @@ class QuotationControllerTest {
                         1, "Advance", BigDecimal.valueOf(10))),
                 null
         );
+    }
+
+    private HandlerMethodArgumentResolver jwtArgumentResolver() {
+        return new HandlerMethodArgumentResolver() {
+            @Override
+            public boolean supportsParameter(MethodParameter parameter) {
+                return parameter.getParameterAnnotation(
+                        AuthenticationPrincipal.class) != null
+                        && Jwt.class.isAssignableFrom(
+                        parameter.getParameterType());
+            }
+
+            @Override
+            public Object resolveArgument(
+                    MethodParameter parameter,
+                    ModelAndViewContainer mavContainer,
+                    NativeWebRequest webRequest,
+                    WebDataBinderFactory binderFactory) {
+                return jwtPrincipal;
+            }
+        };
     }
 
     @Nested

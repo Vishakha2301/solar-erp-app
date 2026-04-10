@@ -46,9 +46,12 @@ class JwtServiceImplTest {
     }
 
     private Jwt buildJwt(String username, Instant expiry) {
+        Instant issuedAt = expiry.isAfter(Instant.now())
+                ? Instant.now()
+                : expiry.minusSeconds(60);
         return new Jwt(
                 "mock-token",
-                Instant.now(),
+                issuedAt,
                 expiry,
                 Map.of("alg", "HS256"),
                 Map.of(
@@ -113,13 +116,11 @@ class JwtServiceImplTest {
         @DisplayName("Returns false for expired token")
         void isTokenValid_expiredToken_returnsFalse() {
             // Generate valid token first
-            String token = jwtService.generateToken(user) + "tempered";
+            Jwt expiredJwt = buildJwt("admin", Instant.now().minusSeconds(60));
+            when(jwtDecoder.decode("expired-token"))
+                    .thenReturn(expiredJwt);
 
-            // Now set expiry to past by setting a very short expiry
-            // and waiting — instead just verify invalid token returns false
-            // since forcing expiry causes issuedAt/expiresAt conflict
-            assertThat(jwtService.isTokenValid("expired.invalid.token"))
-                    .isFalse();
+            assertThat(jwtService.isTokenValid("expired-token")).isFalse();
         }
 
         @Test

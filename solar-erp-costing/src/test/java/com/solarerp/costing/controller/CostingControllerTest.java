@@ -17,8 +17,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -50,12 +56,14 @@ class CostingControllerTest {
     private SavedCostingRequest costingRequest;
     private CostingContextDto contextDto;
     private CostingSnapshotDto snapshotDto;
+    private Jwt jwtPrincipal;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(costingController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .setCustomArgumentResolvers(jwtArgumentResolver())
                 .build();
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
@@ -81,6 +89,32 @@ class CostingControllerTest {
 
         costingRequest = new SavedCostingRequest(
                 contextDto, snapshotDto);
+
+        jwtPrincipal = Jwt.withTokenValue("token")
+                .subject(userId.toString())
+                .header("alg", "none")
+                .build();
+    }
+
+    private HandlerMethodArgumentResolver jwtArgumentResolver() {
+        return new HandlerMethodArgumentResolver() {
+            @Override
+            public boolean supportsParameter(MethodParameter parameter) {
+                return parameter.getParameterAnnotation(
+                        AuthenticationPrincipal.class) != null
+                        && Jwt.class.isAssignableFrom(
+                        parameter.getParameterType());
+            }
+
+            @Override
+            public Object resolveArgument(
+                    MethodParameter parameter,
+                    ModelAndViewContainer mavContainer,
+                    NativeWebRequest webRequest,
+                    WebDataBinderFactory binderFactory) {
+                return jwtPrincipal;
+            }
+        };
     }
 
     @Nested
