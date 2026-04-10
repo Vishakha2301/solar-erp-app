@@ -7,16 +7,15 @@ import com.solarerp.customer.entity.CustomerType;
 import com.solarerp.customer.service.CustomerService;
 import com.solarerp.exception.GlobalExceptionHandler;
 import com.solarerp.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -29,6 +28,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CustomerController Tests")
@@ -52,7 +55,18 @@ class CustomerControllerTest {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(customerController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .addFilters((Filter) (request, response, chain) -> {
+                    Jwt jwt = mock(Jwt.class);
+                    lenient().when(jwt.getSubject())
+                            .thenReturn(userId.toString());
+                    JwtAuthenticationToken auth =
+                            new JwtAuthenticationToken(jwt, List.of());
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(auth);
+                    chain.doFilter(request, response);
+                })
                 .build();
+
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
 
@@ -90,6 +104,11 @@ class CustomerControllerTest {
                 null,
                 List.of()
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Nested

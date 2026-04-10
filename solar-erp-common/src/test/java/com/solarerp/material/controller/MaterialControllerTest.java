@@ -8,15 +8,15 @@ import com.solarerp.material.dto.MaterialRequest;
 import com.solarerp.material.dto.MaterialResponse;
 import com.solarerp.material.entity.MaterialCategory;
 import com.solarerp.material.service.MaterialService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -52,7 +52,18 @@ class MaterialControllerTest {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(materialController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .addFilter((request, response, chain) -> {
+                    Jwt jwt = mock(Jwt.class);
+                    lenient().when(jwt.getSubject())
+                            .thenReturn(userId.toString());
+                    JwtAuthenticationToken auth =
+                            new JwtAuthenticationToken(jwt, List.of());
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(auth);
+                    chain.doFilter(request, response);
+                })
                 .build();
+
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
 
@@ -84,6 +95,11 @@ class MaterialControllerTest {
                 "25 years",
                 "8541.40"
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Nested
