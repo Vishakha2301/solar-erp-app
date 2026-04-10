@@ -10,9 +10,13 @@ import com.solarerp.customer.entity.Customer;
 import com.solarerp.customer.entity.CustomerType;
 import com.solarerp.exception.DocumentGenerationException;
 import com.solarerp.exception.ResourceNotFoundException;
+import com.solarerp.material.entity.Material;
 import com.solarerp.quotation.entity.*;
 import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.impl.QuotationDocumentServiceImpl;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,13 +25,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -205,6 +207,155 @@ class QuotationDocumentServiceImplTest {
             assertThat(customer.getCity()).isEqualTo("Nashik");
             assertThat(customer.getState()).isEqualTo("Maharashtra");
             assertThat(customer.getPincode()).isEqualTo("422001");
+        }
+    }
+
+    @Nested
+    @DisplayName("Private helpers")
+    class HelperTests {
+
+        @SuppressWarnings("unchecked")
+        private Map<String, String> buildPlaceholders(Quotation sourceQuotation) {
+            return (Map<String, String>) ReflectionTestUtils.invokeMethod(
+                    documentService, "buildPlaceholders", sourceQuotation);
+        }
+
+        private String formatAmount(BigDecimal amount) {
+            return (String) ReflectionTestUtils.invokeMethod(
+                    documentService, "formatAmount", amount);
+        }
+
+        private String getInstalmentPct(Map<Integer, QuotationInstalment> map,
+                                        int instalmentNo) {
+            return (String) ReflectionTestUtils.invokeMethod(
+                    documentService, "getInstalmentPct", map, instalmentNo);
+        }
+
+        @Test
+        @DisplayName("buildPlaceholders() fills costing, package and instalment placeholders")
+        void buildPlaceholders_populatesExpectedValues() {
+            Material panel = new Material();
+            panel.setBrandName("Waaree");
+            panel.setModelName("540WP");
+            panel.setSpecification("Mono PERC");
+            panel.setWarranty("25 years");
+
+            Material inverter = new Material();
+            inverter.setBrandName("Sungrow");
+            inverter.setModelName("5kW");
+            inverter.setSpecification("Hybrid");
+
+            Material cable = new Material();
+            cable.setBrandName("Polycab");
+            cable.setModelName("4sqmm");
+
+            QuotationPackageMaterial panelMaterial = new QuotationPackageMaterial();
+            panelMaterial.setMaterial(panel);
+            panelMaterial.setComponentKey("solarPanel");
+
+            QuotationPackageMaterial inverterMaterial = new QuotationPackageMaterial();
+            inverterMaterial.setMaterial(inverter);
+            inverterMaterial.setComponentKey("invertor");
+
+            QuotationPackageMaterial cableMaterial = new QuotationPackageMaterial();
+            cableMaterial.setMaterial(cable);
+            cableMaterial.setComponentKey("dcCable");
+
+            QuotationPackage quotationPackage = new QuotationPackage();
+            quotationPackage.setMaterials(List.of(
+                    panelMaterial, inverterMaterial, cableMaterial));
+            quotation.setPackages(List.of(quotationPackage));
+
+            quotation.setSystemType(null);
+            quotation.setInstalments(List.of(quotation.getInstalments().get(0)));
+
+            when(costingRepository.findById(any()))
+                    .thenReturn(Optional.of(costingEntity));
+            when(costingService.getById(any()))
+                    .thenReturn(costingResponse);
+
+            Map<String, String> placeholders = buildPlaceholders(quotation);
+
+            assertThat(placeholders.get("{{system_details}}"))
+                    .isEqualTo("Rooftop 5.0KW");
+            assertThat(placeholders.get("{{panel_brand}}"))
+                    .isEqualTo("Waaree 540WP");
+            assertThat(placeholders.get("{{inverter_brand}}"))
+                    .isEqualTo("Sungrow 5kW");
+            assertThat(placeholders.get("{{cable_brand}}"))
+                    .isEqualTo("Polycab 4sqmm");
+            assertThat(placeholders.get("{{warranty}}"))
+                    .isEqualTo("25 years");
+            assertThat(placeholders.get("{{actual_system_cost}}"))
+                    .isEqualTo("337,500");
+            assertThat(placeholders.get("{{subsidy_amount}}"))
+                    .isEqualTo("78,000");
+            assertThat(placeholders.get("{{advanced}}")).isEqualTo("10");
+            assertThat(placeholders.get("{{procurement}}")).isEqualTo("0");
+        }
+
+        @Test
+        @DisplayName("formatAmount() returns zero for null and zero values")
+        void formatAmount_nullAndZero_returnsZero() {
+            assertThat(formatAmount(null)).isEqualTo("0");
+            assertThat(formatAmount(BigDecimal.ZERO)).isEqualTo("0");
+            assertThat(formatAmount(BigDecimal.valueOf(12345))).isEqualTo("12,345");
+        }
+
+        @Test
+        @DisplayName("getInstalmentPct() returns value when present else zero")
+        void getInstalmentPct_handlesPresentAndMissingInstalments() {
+            QuotationInstalment inst = new QuotationInstalment();
+            inst.setInstalmentNo(2);
+            inst.setPercentage(BigDecimal.valueOf(60));
+
+            Map<Integer, QuotationInstalment> map = new HashMap<>();
+            map.put(2, inst);
+
+            assertThat(getInstalmentPct(map, 2)).isEqualTo("60");
+            assertThat(getInstalmentPct(map, 4)).isEqualTo("0");
+        }
+
+        @Test
+        @DisplayName("replaceParagraph() replaces placeholders and preserves style")
+        void replaceParagraph_replacesTextAndPreservesFormatting() {
+            XWPFDocument doc = new XWPFDocument();
+            XWPFParagraph paragraph = doc.createParagraph();
+            var run = paragraph.createRun();
+            run.setText("Hello {{name}}");
+            run.setBold(true);
+            run.setItalic(true);
+            run.setColor("FF0000");
+            run.setFontFamily("Arial");
+            run.setFontSize(12);
+
+            Map<String, String> placeholders = new LinkedHashMap<>();
+            placeholders.put("{{name}}", "Solar ERP");
+
+            ReflectionTestUtils.invokeMethod(
+                    documentService, "replaceParagraph", paragraph, placeholders);
+
+            assertThat(paragraph.getText()).isEqualTo("Hello Solar ERP");
+            assertThat(paragraph.getRuns()).hasSize(1);
+            assertThat(paragraph.getRuns().get(0).isBold()).isTrue();
+            assertThat(paragraph.getRuns().get(0).isItalic()).isTrue();
+            assertThat(paragraph.getRuns().get(0).getColor()).isEqualTo("FF0000");
+        }
+
+        @Test
+        @DisplayName("replacePlaceholders() traverses paragraphs and tables")
+        void replacePlaceholders_replacesAcrossDocumentElements() {
+            XWPFDocument doc = new XWPFDocument();
+            doc.createParagraph().createRun().setText("{{title}}");
+            XWPFTable table = doc.createTable(1, 1);
+            table.getRow(0).getCell(0).setText("{{title}}");
+
+            Map<String, String> placeholders = Map.of("{{title}}", "Quotation");
+            ReflectionTestUtils.invokeMethod(
+                    documentService, "replacePlaceholders", doc, placeholders);
+
+            assertThat(doc.getParagraphs().get(0).getText()).isEqualTo("Quotation");
+            assertThat(table.getRow(0).getCell(0).getText()).contains("Quotation");
         }
     }
 }
