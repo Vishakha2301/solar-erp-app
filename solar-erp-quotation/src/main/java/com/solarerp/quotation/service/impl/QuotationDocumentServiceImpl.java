@@ -14,6 +14,7 @@ import com.solarerp.quotation.service.QuotationDocumentService;
 import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -40,6 +41,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public byte[] generateDocx(UUID quotationId) {
         Quotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException(
