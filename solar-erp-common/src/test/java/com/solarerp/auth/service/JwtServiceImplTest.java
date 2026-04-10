@@ -8,39 +8,52 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.security.oauth2.jwt.*;
 
+import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JwtServiceImpl Tests")
 class JwtServiceImplTest {
 
-    private JwtServiceImpl jwtService;
-    private User user;
+    @Mock
+    private JwtEncoder jwtEncoder;
 
-    // Test secret key — 256 bit base64 encoded
-    private static final String TEST_SECRET =
-            "dGVzdC1zZWNyZXQta2V5LWZvci11bml0LXRlc3Rpbmctc29sYXItZXJwLTI1Ng==";
-    private static final long EXPIRY_MS = 3600000L; // 1 hour
+    @Mock
+    private JwtDecoder jwtDecoder;
+
+    @InjectMocks
+    private JwtServiceImpl jwtService;
+
+    private User user;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtServiceImpl();
-        ReflectionTestUtils.setField(
-                jwtService, "secretKey", TEST_SECRET);
-        ReflectionTestUtils.setField(
-                jwtService, "expirationMs", EXPIRY_MS);
-
         user = new User();
-        user.setId(UUID.randomUUID());
         user.setUsername("admin");
         user.setEmail("admin@solarerp.com");
         user.setRole(UserRole.ADMIN);
         user.setActive(true);
+    }
+
+    private Jwt buildJwt(String username, Instant expiry) {
+        return new Jwt(
+                "mock-token",
+                Instant.now(),
+                expiry,
+                Map.of("alg", "HS256"),
+                Map.of(
+                        "username", username,
+                        "sub", user.getId().toString()
+                )
+        );
     }
 
     @Nested
@@ -48,92 +61,16 @@ class JwtServiceImplTest {
     class GenerateTokenTests {
 
         @Test
-        @DisplayName("Generates non-null token for valid user")
-        void generateToken_validUser_returnsNonNullToken() {
+        @DisplayName("Generates non-null token")
+        void generateToken_validUser_returnsToken() {
+            Jwt jwt = buildJwt("admin", Instant.now().plusSeconds(3600));
+
+            when(jwtEncoder.encode(any()))
+                    .thenReturn(jwt);
+
             String token = jwtService.generateToken(user);
 
-            assertThat(token).isNotNull().isNotEmpty();
-        }
-
-        @Test
-        @DisplayName("Generated token has 3 parts separated by dots")
-        void generateToken_validUser_hasThreeParts() {
-            String token = jwtService.generateToken(user);
-
-            assertThat(token.split("\\.")).hasSize(3);
-        }
-
-        @Test
-        @DisplayName("Different users get different tokens")
-        void generateToken_differentUsers_getDifferentTokens() {
-            User anotherUser = new User();
-            anotherUser.setId(UUID.randomUUID());
-            anotherUser.setUsername("manager");
-            anotherUser.setEmail("manager@solarerp.com");
-            anotherUser.setRole(UserRole.MANAGER);
-            anotherUser.setActive(true);
-
-            String token1 = jwtService.generateToken(user);
-            String token2 = jwtService.generateToken(anotherUser);
-
-            assertThat(token1).isNotEqualTo(token2);
-        }
-    }
-
-    @Nested
-    @DisplayName("extractSubject()")
-    class ExtractSubjectTests {
-
-        @Test
-        @DisplayName("Extracts user ID as subject from token")
-        void extractSubject_validToken_returnsUserId() {
-            String token = jwtService.generateToken(user);
-
-            String subject = jwtService.extractSubject(token);
-
-            assertThat(subject)
-                    .isEqualTo(user.getId().toString());
-        }
-    }
-
-    @Nested
-    @DisplayName("isTokenValid()")
-    class IsTokenValidTests {
-
-        @Test
-        @DisplayName("Returns true for freshly generated token")
-        void isTokenValid_freshToken_returnsTrue() {
-            String token = jwtService.generateToken(user);
-
-            assertThat(jwtService.isTokenValid(token)).isTrue();
-        }
-
-        @Test
-        @DisplayName("Returns false for malformed token")
-        void isTokenValid_malformedToken_returnsFalse() {
-            assertThat(jwtService.isTokenValid("not.a.token"))
-                    .isFalse();
-        }
-
-        @Test
-        @DisplayName("Returns false for empty token")
-        void isTokenValid_emptyToken_returnsFalse() {
-            assertThat(jwtService.isTokenValid("")).isFalse();
-        }
-
-        @Test
-        @DisplayName("Returns false for expired token")
-        void isTokenValid_expiredToken_returnsFalse() {
-            // Set expiry to 1ms to force expiry
-            ReflectionTestUtils.setField(
-                    jwtService, "expirationMs", 1L);
-            String token = jwtService.generateToken(user);
-
-            // Wait for token to expire
-            try { Thread.sleep(10); }
-            catch (InterruptedException ignored) {}
-
-            assertThat(jwtService.isTokenValid(token)).isFalse();
+            assertThat(token).isEqualTo("mock-token");
         }
     }
 
@@ -142,13 +79,52 @@ class JwtServiceImplTest {
     class ExtractUsernameTests {
 
         @Test
-        @DisplayName("Extracts username from valid token")
+        @DisplayName("Extracts username from token")
         void extractUsername_validToken_returnsUsername() {
-            String token = jwtService.generateToken(user);
+            Jwt jwt = buildJwt("admin", Instant.now().plusSeconds(3600));
 
-            String username = jwtService.extractUsername(token);
+            when(jwtDecoder.decode("token"))
+                    .thenReturn(jwt);
+
+            String username = jwtService.extractUsername("token");
 
             assertThat(username).isEqualTo("admin");
+        }
+    }
+
+    @Nested
+    @DisplayName("isTokenValid()")
+    class IsTokenValidTests {
+
+        @Test
+        @DisplayName("Returns true for valid token")
+        void isTokenValid_validToken_returnsTrue() {
+            Jwt jwt = buildJwt("admin", Instant.now().plusSeconds(3600));
+
+            when(jwtDecoder.decode("token"))
+                    .thenReturn(jwt);
+
+            assertThat(jwtService.isTokenValid("token")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Returns false for expired token")
+        void isTokenValid_expiredToken_returnsFalse() {
+            Jwt jwt = buildJwt("admin", Instant.now().minusSeconds(10));
+
+            when(jwtDecoder.decode("token"))
+                    .thenReturn(jwt);
+
+            assertThat(jwtService.isTokenValid("token")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Returns false when decoding fails")
+        void isTokenValid_invalidToken_returnsFalse() {
+            when(jwtDecoder.decode("bad-token"))
+                    .thenThrow(new JwtException("Invalid"));
+
+            assertThat(jwtService.isTokenValid("bad-token")).isFalse();
         }
     }
 }

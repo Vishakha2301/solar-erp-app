@@ -46,7 +46,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
                         "Quotation", quotationId));
         try {
             ClassPathResource resource =
-                new ClassPathResource("templates/quotation-template.docx");
+                new ClassPathResource("templates/quotation_template.docx");
 
             try (InputStream is = resource.getInputStream();
                  XWPFDocument doc = new XWPFDocument(is)) {

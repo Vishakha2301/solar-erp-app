@@ -105,7 +105,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private void mapRequestToEntity(CustomerRequest request,
-                                     Customer customer) {
+                                    Customer customer) {
         customer.setCustomerType(request.customerType());
         customer.setName(request.name());
         customer.setCompanyName(request.companyName());
@@ -143,4 +143,11 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.getCity(),
                 customer.getState(),
                 customer.getPincode(),
-                customer​​​​​​​​​​​​​​​​
+                customer.getGstNumber(),
+                customer.isActive(),
+                customer.getCreatedAt(),
+                customer.getCreatedBy(),
+                sites
+        );
+    }
+}
