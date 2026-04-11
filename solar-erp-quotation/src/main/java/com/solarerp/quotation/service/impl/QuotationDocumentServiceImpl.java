@@ -79,6 +79,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
 
         // Aggregate commercial details from all costings
         BigDecimal totalGrandTotal = BigDecimal.ZERO;
+        BigDecimal totalProjectCostWithGst = BigDecimal.ZERO;
         BigDecimal totalSubsidy = BigDecimal.ZERO;
 
         for (QuotationCosting qc : quotation.getCostings()) {
@@ -91,6 +92,10 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
                 totalGrandTotal = totalGrandTotal.add(
                         BigDecimal.valueOf(
                                 response.snapshot().grandTotal()));
+
+                totalProjectCostWithGst = totalProjectCostWithGst.add(
+                        BigDecimal.valueOf(
+                            response.snapshot().projectCostAfterGst()));
 
                 if (systemDetails.isEmpty()
                         && response.context() != null) {
@@ -155,21 +160,17 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
         map.put("{{warranty}}", panelWarranty);
 
         // GST calculation
-        BigDecimal gstRate = new BigDecimal("0.089");
-        BigDecimal costWithoutGst = totalGrandTotal
-                .divide(BigDecimal.ONE.add(gstRate), 2,
-                        RoundingMode.HALF_UP);
-        BigDecimal gstAmount = totalGrandTotal.subtract(costWithoutGst);
+        BigDecimal gstAmount = totalProjectCostWithGst.subtract(totalGrandTotal);
         BigDecimal discount = quotation.getDiscount() != null
                 ? quotation.getDiscount() : BigDecimal.ZERO;
-        BigDecimal landedCost = totalGrandTotal
+        BigDecimal landedCost = totalProjectCostWithGst
                 .subtract(totalSubsidy)
                 .subtract(discount);
 
         map.put("{{system_cost_without_gst}}",
-                formatAmount(costWithoutGst));
+                formatAmount(totalGrandTotal));
         map.put("{{gst_amout}}", formatAmount(gstAmount));
-        map.put("{{actual_system_cost}}", formatAmount(totalGrandTotal));
+        map.put("{{actual_system_cost}}", formatAmount(totalProjectCostWithGst));
         map.put("{{subsidy_amount}}", formatAmount(totalSubsidy));
         map.put("{{landed_cost}}", formatAmount(landedCost));
         map.put("{{amount_in_word}}", amountInWords(landedCost));
