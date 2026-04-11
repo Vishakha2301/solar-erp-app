@@ -18,28 +18,23 @@ public class AmountToWordsConverter {
             "Sixty", "Seventy", "Eighty", "Ninety"
     };
 
-    private static final String[] THOUSANDS = {
-            "", "Thousand", "Million", "Billion"
-    };
-
     public String convert(BigDecimal amount) {
         if (amount == null) throw new IllegalArgumentException("Amount cannot be null");
 
-        // Scale to 2 decimal places
         amount = amount.setScale(2, RoundingMode.HALF_UP);
 
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return "Minus " + convert(amount.abs());
         }
 
-        // Split whole and fractional parts
-        BigDecimal[] parts = amount.divideAndRemainder(BigDecimal.ONE);
-        long wholePart = parts[0].longValueExact();
-        int cents = parts[1].multiply(new BigDecimal("100"))
+        long totalCents = amount.multiply(new BigDecimal("100"))
                 .setScale(0, RoundingMode.HALF_UP)
-                .intValue();
+                .longValue();
 
-        String result = wholePart == 0 ? "Zero" : convertWholeNumber(wholePart);
+        long wholePart = totalCents / 100;
+        int  cents     = (int) (totalCents % 100);
+
+        String result = wholePart == 0 ? "Zero" : convertIndian(wholePart);
 
         if (cents > 0) {
             result += " and " + String.format("%02d", cents) + "/100";
@@ -48,43 +43,49 @@ public class AmountToWordsConverter {
         return result.trim();
     }
 
-    private String convertWholeNumber(long number) {
-        if (number == 0) return "Zero";
+    private String convertIndian(long number) {
+        if (number == 0) return "";
 
-        String result = "";
-        int groupIndex = 0;
+        // Indian grouping: ones(3) | thousands(2) | lakhs(2) | crores(2) | ...
+        long crore     = number / 10_000_000L;
+        long lakh      = (number % 10_000_000L) / 100_000L;
+        long thousand  = (number % 100_000L)     / 1_000L;
+        long hundred   = (number % 1_000L)       / 100L;
+        long remainder = number % 100L;
 
-        while (number > 0) {
-            int group = (int) (number % 1000);
-            if (group != 0) {
-                String groupWords = convertHundreds(group);
-                String suffix = THOUSANDS[groupIndex];
-                result = groupWords + (suffix.isEmpty() ? "" : " " + suffix)
-                        + (result.isEmpty() ? "" : " " + result);
-            }
-            number /= 1000;
-            groupIndex++;
+        StringBuilder result = new StringBuilder();
+
+        if (crore > 0) {
+            result.append(convertIndian(crore)).append(" Crore");
+        }
+        if (lakh > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(convertTwoDigits((int) lakh)).append(" Lakh");
+        }
+        if (thousand > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(convertTwoDigits((int) thousand)).append(" Thousand");
+        }
+        if (hundred > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(ONES[(int) hundred]).append(" Hundred");
+        }
+        if (remainder > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(convertTwoDigits((int) remainder));
         }
 
-        return result.trim();
+        return result.toString();
     }
 
-    private String convertHundreds(int number) {
-        String result = "";
-
-        if (number >= 100) {
-            result += ONES[number / 100] + " Hundred";
-            number %= 100;
-            if (number > 0) result += " ";
+    private String convertTwoDigits(int number) {
+        if (number < 20) {
+            return ONES[number];
         }
-
-        if (number >= 20) {
-            result += TENS[number / 10];
-            if (number % 10 > 0) result += " " + ONES[number % 10];
-        } else if (number > 0) {
-            result += ONES[number];
+        String result = TENS[number / 10];
+        if (number % 10 > 0) {
+            result += " " + ONES[number % 10];
         }
-
         return result;
     }
 }
