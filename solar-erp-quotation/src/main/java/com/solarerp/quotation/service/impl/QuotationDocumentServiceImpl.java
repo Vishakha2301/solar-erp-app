@@ -121,7 +121,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
         map.put("{{consumer_name}}", quotation.getCustomer().getName());
         map.put("{{consumer_address}}", buildAddress(quotation));
         map.put("{{phone_number}}", quotation.getCustomer().getPhone());
-        map.put("{{cosumer_number}}", "");
+        map.put("{{consumer_number}}", "");
 
         // Component makes from packages
         String panelBrand = "";
