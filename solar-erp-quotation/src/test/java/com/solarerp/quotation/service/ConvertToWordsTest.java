@@ -4,6 +4,7 @@ import com.solarerp.costing.repository.CostingRepository;
 import com.solarerp.costing.service.CostingService;
 import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.impl.QuotationDocumentServiceImpl;
+import com.solarerp.quotation.utility.AmountToWordsConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,14 +33,19 @@ class ConvertToWordsTest {
     @Mock
     private CostingService costingService;
 
+    @Mock
+    private AmountToWordsConverter converter;
+
     private QuotationDocumentServiceImpl documentService;
+
 
     @BeforeEach
     void setUp() {
         documentService = new QuotationDocumentServiceImpl(
                 quotationRepository,
                 costingRepository,
-                costingService);
+                costingService,
+                converter);
     }
 
     private String convertToWords(long number) {

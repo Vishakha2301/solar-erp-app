@@ -9,6 +9,7 @@ import com.solarerp.quotation.entity.Quotation;
 import com.solarerp.quotation.entity.QuotationStatus;
 import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.impl.QuotationDocumentServiceImpl;
+import com.solarerp.quotation.utility.AmountToWordsConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,6 +37,9 @@ class BuildAddressTest {
     @Mock
     private CostingService costingService;
 
+    @Mock
+    private AmountToWordsConverter converter;
+
     private QuotationDocumentServiceImpl documentService;
 
     private Customer customer;
@@ -47,7 +51,8 @@ class BuildAddressTest {
         documentService = new QuotationDocumentServiceImpl(
                 quotationRepository,
                 costingRepository,
-                costingService);
+                costingService,
+                converter);
 
         customer = new Customer();
         customer.setCustomerType(CustomerType.INDIVIDUAL);

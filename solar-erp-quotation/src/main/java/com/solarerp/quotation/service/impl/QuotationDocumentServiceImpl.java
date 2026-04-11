@@ -11,6 +11,7 @@ import com.solarerp.quotation.entity.QuotationInstalment;
 import com.solarerp.quotation.entity.QuotationPackageMaterial;
 import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.QuotationDocumentService;
+import com.solarerp.quotation.utility.AmountToWordsConverter;
 import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -30,14 +31,17 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
     private final QuotationRepository quotationRepository;
     private final CostingRepository costingRepository;
     private final CostingService costingService;
+    private final AmountToWordsConverter converter;
 
     public QuotationDocumentServiceImpl(
             QuotationRepository quotationRepository,
             CostingRepository costingRepository,
-            CostingService costingService) {
+            CostingService costingService,
+            AmountToWordsConverter converter) {
         this.quotationRepository = quotationRepository;
         this.costingRepository = costingRepository;
         this.costingService = costingService;
+        this.converter = converter;
     }
 
     @Override
@@ -173,7 +177,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
         map.put("{{actual_system_cost}}", formatAmount(totalProjectCostWithGst));
         map.put("{{subsidy_amount}}", formatAmount(totalSubsidy));
         map.put("{{landed_cost}}", formatAmount(landedCost));
-        map.put("{{amount_in_word}}", amountInWords(landedCost));
+        map.put("{{amount_in_word}}", amountInWords(totalProjectCostWithGst));
 
         // Payment instalments
         Map<Integer, QuotationInstalment> instalmentMap = new HashMap<>();
@@ -284,41 +288,5 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
         QuotationInstalment inst = map.get(no);
         if (inst == null) return "0";
         return inst.getPercentage().toPlainString();
-    }
-
-    private String amountInWords(BigDecimal amount) {
-        if (amount == null) return "";
-        long rupees = amount.longValue();
-        return "Rupees " + convertToWords(rupees) + " Only";
-    }
-
-    private String convertToWords(long number) {
-        if (number == 0) return "Zero";
-        String[] ones = {"", "One", "Two", "Three", "Four", "Five",
-                "Six", "Seven", "Eight", "Nine", "Ten", "Eleven",
-                "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
-                "Seventeen", "Eighteen", "Nineteen"};
-        String[] tens = {"", "", "Twenty", "Thirty", "Forty", "Fifty",
-                "Sixty", "Seventy", "Eighty", "Ninety"};
-        if (number < 20) return ones[(int) number];
-        if (number < 100)
-            return tens[(int) (number / 10)] +
-                    (number % 10 != 0
-                            ? " " + ones[(int) (number % 10)] : "");
-        if (number < 1000)
-            return ones[(int) (number / 100)] + " Hundred" +
-                    (number % 100 != 0
-                            ? " " + convertToWords(number % 100) : "");
-        if (number < 100000)
-            return convertToWords(number / 1000) + " Thousand" +
-                    (number % 1000 != 0
-                            ? " " + convertToWords(number % 1000) : "");
-        if (number < 10000000)
-            return convertToWords(number / 100000) + " Lakh" +
-                    (number % 100000 != 0
-                            ? " " + convertToWords(number % 100000) : "");
-        return convertToWords(number / 10000000) + " Crore" +
-                (number % 10000000 != 0
-                        ? " " + convertToWords(number % 10000000) : "");
     }
 }
