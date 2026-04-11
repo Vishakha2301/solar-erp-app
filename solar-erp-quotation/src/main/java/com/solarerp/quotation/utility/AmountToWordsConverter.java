@@ -27,30 +27,36 @@ public class AmountToWordsConverter {
             return "Minus " + convert(amount.abs());
         }
 
-        long totalCents = amount.multiply(new BigDecimal("100"))
+        long totalPaise = amount.multiply(new BigDecimal("100"))
                 .setScale(0, RoundingMode.HALF_UP)
                 .longValue();
 
-        long wholePart = totalCents / 100;
-        int  cents     = (int) (totalCents % 100);
+        long rupees = totalPaise / 100;
+        int  paise  = (int) (totalPaise % 100);
 
-        String result = wholePart == 0 ? "Zero" : convertIndian(wholePart);
+        StringBuilder result = new StringBuilder();
 
-        if (cents > 0) {
-            result += " and " + String.format("%02d", cents) + "/100";
+        if (rupees > 0) {
+            result.append("Rupees ").append(convertIndian(rupees));
+        } else {
+            result.append("Zero Rupees");
         }
 
-        return result.trim();
+        if (paise > 0) {
+            result.append(" and ").append(convertTwoDigits(paise)).append(" Paise");
+        }
+        result.append(" Only");
+
+        return result.toString();
     }
 
     private String convertIndian(long number) {
         if (number == 0) return "";
 
-        // Indian grouping: ones(3) | thousands(2) | lakhs(2) | crores(2) | ...
-        long crore     = number / 10_000_000L;
-        long lakh      = (number % 10_000_000L) / 100_000L;
-        long thousand  = (number % 100_000L)     / 1_000L;
-        long hundred   = (number % 1_000L)       / 100L;
+        long crore    = number / 10_000_000L;
+        long lakh     = (number % 10_000_000L) / 100_000L;
+        long thousand = (number % 100_000L)     / 1_000L;
+        long hundred  = (number % 1_000L)       / 100L;
         long remainder = number % 100L;
 
         StringBuilder result = new StringBuilder();
