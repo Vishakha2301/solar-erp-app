@@ -177,7 +177,7 @@ public class QuotationDocumentServiceImpl implements QuotationDocumentService {
         map.put("{{actual_system_cost}}", formatAmount(totalProjectCostWithGst));
         map.put("{{subsidy_amount}}", formatAmount(totalSubsidy));
         map.put("{{landed_cost}}", formatAmount(landedCost));
-        map.put("{{amount_in_word}}", amountInWords(totalProjectCostWithGst));
+        map.put("{{amount_in_word}}", converter.convert(totalProjectCostWithGst));
 
         // Payment instalments
         Map<Integer, QuotationInstalment> instalmentMap = new HashMap<>();
