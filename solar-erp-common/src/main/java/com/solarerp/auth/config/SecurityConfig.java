@@ -29,8 +29,8 @@ public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.secret-key}")
     private String secretKey;
 
-    @Value("${app.security.cors.allowed-origin-patterns:*}")
-    private String allowedOriginPatterns;
+    @Value("${app.security.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private String allowedOrigins;
 
     @Value("${app.security.cors.allow-credentials:false}")
     private boolean allowCredentials;
@@ -57,12 +57,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        List<String> originPatterns = Arrays.stream(allowedOriginPatterns.split(","))
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(value -> !value.isBlank())
                 .toList();
 
-        config.setAllowedOriginPatterns(originPatterns.isEmpty() ? List.of("*") : originPatterns);
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(allowCredentials);
