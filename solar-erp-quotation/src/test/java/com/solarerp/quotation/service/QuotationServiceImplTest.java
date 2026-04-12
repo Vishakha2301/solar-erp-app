@@ -55,6 +55,7 @@ class QuotationServiceImplTest {
     private Quotation draftQuotation;
     private Quotation submittedQuotation;
     private Quotation rejectedQuotation;
+    private Quotation cancelledQuotation;
     private Customer customer;
 
     @BeforeEach
@@ -101,6 +102,18 @@ class QuotationServiceImplTest {
         rejectedQuotation.setCostings(new ArrayList<>());
         rejectedQuotation.setInstalments(new ArrayList<>());
         rejectedQuotation.setPackages(new ArrayList<>());
+
+        cancelledQuotation = new Quotation();
+        cancelledQuotation.setId(quotationId);
+        cancelledQuotation.setQuotationNumber("QT-2026-001");
+        cancelledQuotation.setStatus(QuotationStatus.CANCELLED);
+        cancelledQuotation.setCreatedBy(userId);
+        cancelledQuotation.setCustomer(customer);
+        cancelledQuotation.setValidityDays(30);
+        cancelledQuotation.setDiscount(BigDecimal.ZERO);
+        cancelledQuotation.setCostings(new ArrayList<>());
+        cancelledQuotation.setInstalments(new ArrayList<>());
+        cancelledQuotation.setPackages(new ArrayList<>());
     }
 
     @Nested
@@ -276,6 +289,41 @@ class QuotationServiceImplTest {
             assertThatThrownBy(() ->
                     quotationService.reject(quotationId, null, userId))
                     .isInstanceOf(BadRequestException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("cancel()")
+    class CancelTests {
+
+        @Test
+        @DisplayName("REJECTED quotation can be cancelled")
+        void cancel_rejectedQuotation_setsStatusToCancelled() {
+            when(quotationRepository.findById(quotationId))
+                    .thenReturn(Optional.of(rejectedQuotation));
+            when(quotationRepository.save(any()))
+                    .thenReturn(rejectedQuotation);
+
+            quotationService.cancel(quotationId, userId);
+
+            assertThat(rejectedQuotation.getStatus())
+                    .isEqualTo(QuotationStatus.CANCELLED);
+            assertThat(rejectedQuotation.getApprovedRejectedBy())
+                    .isEqualTo(userId);
+            assertThat(rejectedQuotation.getApprovedRejectedAt())
+                    .isNotNull();
+        }
+
+        @Test
+        @DisplayName("Non-REJECTED quotation cannot be cancelled")
+        void cancel_nonRejectedQuotation_throwsBadRequest() {
+            when(quotationRepository.findById(quotationId))
+                    .thenReturn(Optional.of(cancelledQuotation));
+
+            assertThatThrownBy(() ->
+                    quotationService.cancel(quotationId, userId))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("Only REJECTED quotations can be cancelled");
         }
     }
 

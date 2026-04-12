@@ -1,0 +1,1 @@
+ALTER TYPE quotation_status ADD VALUE IF NOT EXISTS 'CANCELLED';

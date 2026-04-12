@@ -204,6 +204,22 @@ public class QuotationServiceImpl implements QuotationService {
     }
 
     @Override
+    public QuotationResponse cancel(UUID id, UUID userId) {
+        Quotation quotation = findOrThrow(id);
+
+        if (quotation.getStatus() != QuotationStatus.REJECTED) {
+            throw new BadRequestException(
+                    "Only REJECTED quotations can be cancelled");
+        }
+
+        quotation.setStatus(QuotationStatus.CANCELLED);
+        quotation.setApprovedRejectedBy(userId);
+        quotation.setApprovedRejectedAt(Instant.now());
+
+        return toResponse(quotationRepository.save(quotation));
+    }
+
+    @Override
     public void delete(UUID id) {
         Quotation quotation = findOrThrow(id);
 

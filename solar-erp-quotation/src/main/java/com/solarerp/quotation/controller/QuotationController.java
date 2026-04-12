@@ -90,6 +90,13 @@ public class QuotationController {
         return quotationService.reject(id, rejectionReason, userId(jwt));
     }
 
+    @PostMapping("/{id}/cancel")
+    public QuotationResponse cancel(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
+        return quotationService.cancel(id, userId(jwt));
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
