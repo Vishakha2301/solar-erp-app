@@ -27,5 +27,7 @@ public interface QuotationService {
 
     QuotationResponse reject(UUID id, String rejectionReason, UUID userId);
 
+    QuotationResponse cancel(UUID id, UUID userId);
+
     void delete(UUID id);
 }

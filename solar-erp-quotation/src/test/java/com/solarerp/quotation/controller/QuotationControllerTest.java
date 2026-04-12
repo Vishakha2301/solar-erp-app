@@ -463,6 +463,59 @@ class QuotationControllerTest {
     }
 
     @Nested
+    @DisplayName("POST /api/v1/quotations/{id}/cancel")
+    class CancelTests {
+
+        @Test
+        @DisplayName("Returns 200 when quotation cancelled")
+        void cancel_rejectedQuotation_returns200() throws Exception {
+            QuotationResponse cancelledResponse = new QuotationResponse(
+                    quotationId,
+                    "QT-2026-001",
+                    quotationResponse.customer(),
+                    null,
+                    QuotationStatus.CANCELLED,
+                    "ONGRID 5KW",
+                    30,
+                    BigDecimal.ZERO,
+                    null, null, null, null,
+                    false, null, "Price too high", null,
+                    userId,
+                    null, userId, Instant.now(),
+                    Instant.now(),
+                    Instant.now(),
+                    List.of(), List.of(), List.of()
+            );
+
+            when(quotationService.cancel(eq(quotationId), any()))
+                    .thenReturn(cancelledResponse);
+
+            mockMvc.perform(post(
+                            "/api/v1/quotations/{id}/cancel",
+                            quotationId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status")
+                            .value("CANCELLED"));
+        }
+
+        @Test
+        @DisplayName("Returns 400 when cancelling non-rejected quotation")
+        void cancel_nonRejected_returns400() throws Exception {
+            when(quotationService.cancel(eq(quotationId), any()))
+                    .thenThrow(new BadRequestException(
+                            "Only REJECTED quotations can be cancelled"));
+
+            mockMvc.perform(post(
+                            "/api/v1/quotations/{id}/cancel",
+                            quotationId))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.message")
+                            .value("Only REJECTED quotations can be cancelled"));
+        }
+    }
+
+    @Nested
     @DisplayName("DELETE /api/v1/quotations/{id}")
     class DeleteTests {
 
