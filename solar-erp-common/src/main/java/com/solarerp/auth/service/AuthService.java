@@ -4,5 +4,10 @@ import com.solarerp.auth.dto.LoginRequest;
 import com.solarerp.auth.dto.LoginResponse;
 
 public interface AuthService {
-    LoginResponse login(LoginRequest request);
+
+    default LoginResponse login(LoginRequest request) {
+        return login(request, "unknown");
+    }
+
+    LoginResponse login(LoginRequest request, String clientIp);
 }

@@ -5,6 +5,7 @@ import com.solarerp.costing.dto.SavedCostingResponse;
 import com.solarerp.costing.service.CostingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -23,17 +24,20 @@ public class CostingController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES','VIEWER')")
     public List<SavedCostingResponse> getAll() {
         return costingService.getAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES','VIEWER')")
     public SavedCostingResponse getById(@PathVariable UUID id) {
         return costingService.getById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES')")
     public SavedCostingResponse create(
             @Valid @RequestBody SavedCostingRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -41,6 +45,7 @@ public class CostingController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES')")
     public SavedCostingResponse update(
             @PathVariable UUID id,
             @Valid @RequestBody SavedCostingRequest request,
@@ -50,6 +55,7 @@ public class CostingController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public void delete(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {

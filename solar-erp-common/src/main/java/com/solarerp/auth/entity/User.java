@@ -38,6 +38,14 @@ public class User {
     private boolean active = true;
 
     @Setter
+    @Column(nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Setter
+    @Column
+    private Instant lockedUntil;
+
+    @Setter
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
