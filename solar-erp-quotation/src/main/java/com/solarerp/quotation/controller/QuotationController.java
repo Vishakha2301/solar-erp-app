@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -33,27 +34,32 @@ public class QuotationController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES','VIEWER')")
     public List<QuotationResponse> getAll() {
         return quotationService.getAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES','VIEWER')")
     public QuotationResponse getById(@PathVariable UUID id) {
         return quotationService.getById(id);
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES','VIEWER')")
     public List<QuotationResponse> getByStatus(@PathVariable QuotationStatus status) {
         return quotationService.getByStatus(status);
     }
 
     @GetMapping("/customer/{customerId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES','VIEWER')")
     public List<QuotationResponse> getByCustomer(@PathVariable UUID customerId) {
         return quotationService.getByCustomer(customerId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES')")
     public QuotationResponse create(
             @Valid @RequestBody QuotationRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -61,6 +67,7 @@ public class QuotationController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES')")
     public QuotationResponse update(
             @PathVariable UUID id,
             @Valid @RequestBody QuotationRequest request) {
@@ -68,6 +75,7 @@ public class QuotationController {
     }
 
     @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES')")
     public QuotationResponse submit(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
@@ -75,6 +83,7 @@ public class QuotationController {
     }
 
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public QuotationResponse approve(
             @PathVariable UUID id,
             @RequestParam(required = false) String approvalNotes,
@@ -83,6 +92,7 @@ public class QuotationController {
     }
 
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public QuotationResponse reject(
             @PathVariable UUID id,
             @RequestParam String rejectionReason,
@@ -91,6 +101,7 @@ public class QuotationController {
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES')")
     public QuotationResponse cancel(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
@@ -99,11 +110,13 @@ public class QuotationController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public void delete(@PathVariable UUID id) {
         quotationService.delete(id);
     }
 
     @GetMapping("/{id}/document")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SALES','VIEWER')")
     public ResponseEntity<byte[]> downloadDocument(@PathVariable UUID id) {
         byte[] document = quotationDocumentService.generateDocx(id);
 

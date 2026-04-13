@@ -29,6 +29,13 @@ SPRING_PROFILES_ACTIVE=prod ./mvnw -pl solar-erp-app spring-boot:run
 - `JWT_SECRET`
 - `CORS_ALLOWED_ORIGINS` (comma-separated list, e.g. `https://erp.example.com,https://admin.example.com`)
 
+Bootstrap admin for first deployment (optional but recommended when DB is empty):
+- `BOOTSTRAP_ADMIN_ENABLED=true`
+- `BOOTSTRAP_ADMIN_USERNAME`
+- `BOOTSTRAP_ADMIN_EMAIL`
+- `BOOTSTRAP_ADMIN_PASSWORD`
+- `BOOTSTRAP_ADMIN_ROLE` (optional, default `ADMIN`)
+
 ### 3) Optional tuning variables
 
 - `DB_PORT` (default `5432`)
@@ -47,3 +54,34 @@ Only these endpoints are exposed in `prod`:
 
 - `/actuator/health`
 - `/actuator/info`
+
+### 5) First customer bootstrap flow (exact sequence)
+
+1. Start once with bootstrap enabled and credentials set:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod \
+BOOTSTRAP_ADMIN_ENABLED=true \
+BOOTSTRAP_ADMIN_USERNAME=owner.admin \
+BOOTSTRAP_ADMIN_EMAIL=owner.admin@yourcompany.com \
+BOOTSTRAP_ADMIN_PASSWORD='<strong-random-password>' \
+./mvnw -pl solar-erp-app spring-boot:run
+```
+
+2. On startup, the app checks:
+   - if `BOOTSTRAP_ADMIN_ENABLED` is `true`
+   - and if the `users` table is empty
+
+3. If both are true, it creates exactly one user with BCrypt password hash and configured role (default `ADMIN`).
+
+4. Login via `/api/v1/auth/login` using that bootstrap username/email + password.
+
+5. Immediately disable bootstrap (`BOOTSTRAP_ADMIN_ENABLED=false`) and restart.
+
+6. Future restarts will not create another bootstrap user, and if users already exist the bootstrap step is skipped.
+
+
+## Production readiness assessment
+
+- See `docs/first-customer-production-readiness.md` for the latest first-customer go-live review and checklist.
+- For first login without a seeded SQL user, use the bootstrap admin environment variables above, then disable `BOOTSTRAP_ADMIN_ENABLED` after initial setup.
