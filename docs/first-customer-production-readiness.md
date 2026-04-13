@@ -1,83 +1,46 @@
 # Production Readiness Check for First Customer
 
-Date: 2026-04-13 (UTC)
-Scope: repository-level review of configuration, security defaults, and operational setup for `solar-erp-app`.
+Date: 2026-04-13 (UTC)  
+Scope: repository-level review of configuration, security controls, and operational readiness for `solar-erp-app`.
 
 ## Executive summary
 
-**Current recommendation: NOT READY for first external customer without a short hardening sprint.**
+**Current recommendation: Almost ready, but still NOT READY for first external customer until the remaining operational controls are completed.**
 
-The codebase already includes several strong production foundations (profile-based config, database migrations, JWT auth, graceful shutdown, and request correlation logging). However, there are a few high-priority gaps that should be closed before onboarding a real customer.
+## Completed in repository
 
-## What is already in good shape
+- [x] One-time bootstrap admin flow and removal of permanent seeded admin.
+- [x] RBAC enforcement on business endpoints.
+- [x] Login abuse protection (rate limiting + account lockout + auth audit logging).
+- [x] Draft docs for runbooks and observability baseline.
 
-1. **Production profile exists and is env-driven**
-   - Dedicated `prod` profile with required env vars for DB and JWT secret.
-   - CORS origins are externally configurable.
-2. **Schema lifecycle management is in place**
-   - Flyway migrations are enabled by default with versioned SQL migrations.
-3. **Security baseline exists**
-   - API is locked down by default except login endpoints.
-   - Password hashing uses BCrypt.
-4. **Operational basics exist**
-   - Graceful shutdown enabled.
-   - Actuator endpoint exposure is reduced to `health` and `info`.
-   - Request correlation ID is logged and returned via `X-Request-Id`.
+## Remaining before first customer go-live
 
-## High-priority blockers before first customer
+1. **Operationalize login abuse controls in production**
+   - Confirm thresholds in real traffic (`LOGIN_RATE_LIMIT_*`, `LOGIN_LOCKOUT_*`).
+   - Validate lockout/reset behavior in UAT and incident simulations.
 
-1. **Replace permanent seeded admin with controlled bootstrap flow**
-   - Avoid shipping a static default admin in SQL migrations.
-   - Use one-time bootstrap admin env vars only when the users table is empty, then disable the bootstrap flag after first login.
+2. **Finalize operational runbooks with ownership and drills**
+   - Convert `docs/operations-runbook.md` into an on-call owned SOP.
+   - Run at least one backup/restore drill and record achieved RPO/RTO.
 
-2. **Login abuse protections are still pending**
-   - No account lockout, failed-attempt throttling, or rate limiting found for `/api/v1/auth/login`.
-   - Add brute-force protections before exposing publicly.
+3. **Wire observability baseline into real tooling**
+   - Implement dashboards and alerts from `docs/observability-alerting.md`.
+   - Ensure centralized searchable logs and alert routing are live.
 
-3. **Operational runbooks and SLO alerting need implementation in production tooling**
-   - Initial runbook drafts now exist in `docs/operations-runbook.md` and `docs/observability-alerting.md`.
-   - Next step is wiring these into real on-call processes and monitoring systems.
+4. **Produce release evidence from CI in a network-enabled environment**
+   - Attach a clean quality run: `mvn test`, coverage, and static analysis.
+   - Keep the build/test artifact as go-live evidence.
 
-## Medium-priority gaps (recommended before/soon after go-live)
+## Go-live gate checklist (must be green)
 
-1. **Runbook and disaster recovery**
-   - No repository evidence of backup/restore cadence, RPO/RTO targets, or restore drill checklist.
-
-2. **Observability depth**
-   - Health/info endpoints are good, but production operations typically also need centralized logs, alerting, and error-rate/latency SLO dashboards.
-
-3. **Release readiness evidence**
-   - In this environment, full `mvn test` could not be executed because Maven wrapper dependency download failed.
-   - Capture a clean CI run artifact before go-live.
-
-## Go-live checklist (first-customer minimum)
-
-- [ ] Use one-time bootstrap admin creation and keep it disabled by default.
-- [x] Define and enforce RBAC on business endpoints.
-- [x] Add login rate limiting and failed-attempt controls.
-- [ ] Produce green CI report (tests + coverage + static analysis).
-- [ ] Document backup/restore process and perform one restore drill. (drafted; drill pending)
-- [ ] Confirm production secrets are injected via secret manager (not shell history or compose files).
-- [ ] Confirm TLS termination, domain allowlist for CORS, and reverse-proxy hardening.
-- [ ] Define observability alerts and dashboards. (baseline documented; tooling hookup pending)
-- [ ] Create on-call runbook for incidents (auth failures, DB saturation, migration rollback).
-
-## Suggested 1-week hardening plan
-
-### Day 1-2
-- Finalize one-time bootstrap admin behavior for production and disable after setup.
-- Validate newly-applied method-level role authorization (`@PreAuthorize`) in UAT.
-
-### Day 3
-- Add login throttling (IP/user-based), lockout policy, and structured audit events.
-
-### Day 4
-- Set up production dashboards and alerts (auth failures, 5xx spikes, p95 latency, DB pool exhaustion).
-
-### Day 5
-- Execute full CI and smoke tests against prod-like environment.
-- Perform backup restore drill and sign off readiness.
+- [ ] Login abuse thresholds tuned and validated in UAT.
+- [ ] Backup/restore drill completed and documented with actual RPO/RTO.
+- [ ] Production alerting + dashboards enabled (5xx, latency, auth failures, DB saturation).
+- [ ] Centralized log search verified with request-id correlation.
+- [ ] Clean CI quality report attached to release ticket.
+- [ ] TLS/reverse-proxy/CORS/domain controls validated in production environment.
 
 ## Verdict
 
-With the blockers above fixed and one clean production-like validation run, this service should be in a solid position for first customer onboarding.
+Once the six checklist items above are complete, the backend is in a suitable state for first customer onboarding.
