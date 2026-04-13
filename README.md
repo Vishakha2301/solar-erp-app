@@ -46,6 +46,10 @@ Bootstrap admin for first deployment (optional but recommended when DB is empty)
 - `DB_KEEPALIVE_TIME` (default `300000`)
 - `DB_VALIDATION_TIMEOUT_MS` (default `5000`)
 - `CORS_ALLOW_CREDENTIALS` (default `false`)
+- `LOGIN_RATE_LIMIT_WINDOW_MINUTES` (default `1`)
+- `LOGIN_RATE_LIMIT_MAX_ATTEMPTS` (default `20`)
+- `LOGIN_LOCKOUT_MAX_FAILED_ATTEMPTS` (default `5`)
+- `LOGIN_LOCKOUT_DURATION_MINUTES` (default `15`)
 - `SERVER_PORT` (default `8080`)
 
 ### 4) Actuator endpoints in production
@@ -84,4 +88,6 @@ BOOTSTRAP_ADMIN_PASSWORD='<strong-random-password>' \
 ## Production readiness assessment
 
 - See `docs/first-customer-production-readiness.md` for the latest first-customer go-live review and checklist.
+- See `docs/operations-runbook.md` for incident and backup/restore playbooks.
+- See `docs/observability-alerting.md` for alert and dashboard baseline.
 - For first login without a seeded SQL user, use the bootstrap admin environment variables above, then disable `BOOTSTRAP_ADMIN_ENABLED` after initial setup.

@@ -34,9 +34,9 @@ The codebase already includes several strong production foundations (profile-bas
    - No account lockout, failed-attempt throttling, or rate limiting found for `/api/v1/auth/login`.
    - Add brute-force protections before exposing publicly.
 
-3. **Operational runbooks and SLO alerting still pending**
-   - No repository evidence of backup/restore cadence, RPO/RTO targets, or restore drill checklist.
-   - Production operations also need centralized logs, alerting, and latency/error-rate dashboards.
+3. **Operational runbooks and SLO alerting need implementation in production tooling**
+   - Initial runbook drafts now exist in `docs/operations-runbook.md` and `docs/observability-alerting.md`.
+   - Next step is wiring these into real on-call processes and monitoring systems.
 
 ## Medium-priority gaps (recommended before/soon after go-live)
 
@@ -54,11 +54,12 @@ The codebase already includes several strong production foundations (profile-bas
 
 - [ ] Use one-time bootstrap admin creation and keep it disabled by default.
 - [x] Define and enforce RBAC on business endpoints.
-- [ ] Add login rate limiting and failed-attempt controls.
+- [x] Add login rate limiting and failed-attempt controls.
 - [ ] Produce green CI report (tests + coverage + static analysis).
-- [ ] Document backup/restore process and perform one restore drill.
+- [ ] Document backup/restore process and perform one restore drill. (drafted; drill pending)
 - [ ] Confirm production secrets are injected via secret manager (not shell history or compose files).
 - [ ] Confirm TLS termination, domain allowlist for CORS, and reverse-proxy hardening.
+- [ ] Define observability alerts and dashboards. (baseline documented; tooling hookup pending)
 - [ ] Create on-call runbook for incidents (auth failures, DB saturation, migration rollback).
 
 ## Suggested 1-week hardening plan

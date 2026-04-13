@@ -32,6 +32,13 @@ app:
       email: ${BOOTSTRAP_ADMIN_EMAIL:}
       password: ${BOOTSTRAP_ADMIN_PASSWORD:}
       role: ${BOOTSTRAP_ADMIN_ROLE:ADMIN}
+    login-abuse:
+      rate-limit:
+        window-minutes: ${LOGIN_RATE_LIMIT_WINDOW_MINUTES:1}
+        max-attempts: ${LOGIN_RATE_LIMIT_MAX_ATTEMPTS:20}
+      lockout:
+        max-failed-attempts: ${LOGIN_LOCKOUT_MAX_FAILED_ATTEMPTS:5}
+        duration-minutes: ${LOGIN_LOCKOUT_DURATION_MINUTES:15}
 
 server:
   shutdown: graceful
