@@ -1,0 +1,86 @@
+# Solar ERP backend - systemd unit
+#
+# Location on production VPS: /etc/systemd/system/solar-erp-app.service
+#
+# Install steps (one-time):
+#   sudo cp solar-erp-app.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable solar-erp-app
+#   sudo systemctl start solar-erp-app
+#
+# Day-to-day commands:
+#   sudo systemctl status solar-erp-app
+#   sudo systemctl restart solar-erp-app
+#   sudo journalctl -u solar-erp-app -f         # tail logs
+#   sudo journalctl -u solar-erp-app --since "1 hour ago"
+#
+# Expected layout on the VPS:
+#   /opt/solar-erp/
+#     app/
+#       solar-erp-app-0.0.1-SNAPSHOT.jar     <- the JAR you scp from your laptop
+#     deploy/
+#       .env.prod                            <- real secrets (gitignored)
+#       docker-compose.prod.yml
+
+[Unit]
+Description=Solar ERP backend (Spring Boot)
+Documentation=https://github.com/<your-org>/solar-erp
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+
+# Run as a dedicated unprivileged user (we'll create `solarerp` during VPS setup).
+User=solarerp
+Group=solarerp
+
+WorkingDirectory=/opt/solar-erp/app
+
+# Load all production env vars (DB_*, JWT_SECRET, BOOTSTRAP_*, CORS_*, etc.)
+EnvironmentFile=/opt/solar-erp/deploy/.env.prod
+
+# JVM tuning for a 2 GB droplet:
+#  - Postgres container: ~700 MB max
+#  - System + Docker: ~300 MB
+#  - JVM: ~700 MB
+# -Xmx512m leaves headroom; container-aware flags help if we ever Dockerize.
+ExecStart=/usr/bin/java \
+    -Xms256m \
+    -Xmx512m \
+    -XX:+ExitOnOutOfMemoryError \
+    -Djava.security.egd=file:/dev/./urandom \
+    -Duser.timezone=Asia/Kolkata \
+    -jar /opt/solar-erp/app/solar-erp-app.jar
+
+# Graceful shutdown — Spring Boot is configured for graceful shutdown,
+# give it time to drain in-flight requests.
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+# Restart on crash, but back off if it crash-loops.
+Restart=on-failure
+RestartSec=10s
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+# Hardening — limit what the process can do.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/solar-erp/app /var/log/solar-erp
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+# Standard logging via systemd-journald.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=solar-erp-app
+
+[Install]
+WantedBy=multi-user.target

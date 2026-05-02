@@ -1,0 +1,62 @@
+# Solar ERP - Production Postgres
+#
+# Runs PostgreSQL only. The backend runs natively as a systemd service
+# (see solar-erp-app.service) and connects to Postgres on localhost:5432.
+#
+# Usage on the production VPS:
+#   1. cd /opt/solar-erp/deploy
+#   2. cp .env.prod.example .env.prod  (then fill in real values)
+#   3. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#   4. docker compose -f docker-compose.prod.yml ps
+#
+# DO NOT bind to 0.0.0.0:5432 — Postgres is only reachable from the host
+# (where the backend JAR runs). External access goes through the backend.
+
+services:
+
+  postgres:
+    image: postgres:17.4
+    container_name: solar-erp-postgres-prod
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Strict UTF-8 + India timezone so timestamps in DB match app expectations.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      TZ: "Asia/Kolkata"
+
+    # Bind to loopback only. Backend on the host connects via 127.0.0.1:5432.
+    # Never expose 5432 publicly.
+    ports:
+      - "127.0.0.1:5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Postgres logs to stdout by default; we capture via Docker log driver.
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+    # Resource limits keep Postgres from starving the JVM on a 2GB droplet.
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  postgres_data:
+    name: solar-erp-postgres-data
