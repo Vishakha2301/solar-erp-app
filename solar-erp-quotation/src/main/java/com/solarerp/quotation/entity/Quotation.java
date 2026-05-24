@@ -4,9 +4,6 @@ import com.solarerp.customer.entity.Customer;
 import com.solarerp.customer.entity.CustomerSite;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -36,8 +33,7 @@ public class Quotation {
     private CustomerSite customerSite;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "quotation_status")
+    @Column(nullable = false)
     private QuotationStatus status = QuotationStatus.DRAFT;
 
     @Column(name = "system_type", length = 100)

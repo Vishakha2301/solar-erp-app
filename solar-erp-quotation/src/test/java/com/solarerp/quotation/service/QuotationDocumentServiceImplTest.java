@@ -14,6 +14,7 @@ import com.solarerp.material.entity.Material;
 import com.solarerp.quotation.entity.*;
 import com.solarerp.quotation.repository.QuotationRepository;
 import com.solarerp.quotation.service.impl.QuotationDocumentServiceImpl;
+import com.solarerp.quotation.utility.AmountToWordsConverter;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -47,6 +48,9 @@ class QuotationDocumentServiceImplTest {
 
     @Mock
     private CostingService costingService;
+
+    @Mock
+    private AmountToWordsConverter converter;
 
     @InjectMocks
     private QuotationDocumentServiceImpl documentService;
@@ -287,7 +291,7 @@ class QuotationDocumentServiceImplTest {
             assertThat(placeholders.get("{{warranty}}"))
                     .isEqualTo("25 years");
             assertThat(placeholders.get("{{actual_system_cost}}"))
-                    .isEqualTo("337,500");
+                    .isEqualTo("367,538");
             assertThat(placeholders.get("{{subsidy_amount}}"))
                     .isEqualTo("78,000");
             assertThat(placeholders.get("{{advanced}}")).isEqualTo("10");

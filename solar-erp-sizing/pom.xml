@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.solarerp</groupId>
+        <artifactId>solar-erp</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>solar-erp-sizing</artifactId>
+    <name>solar-erp-sizing</name>
+    <description>Solar ERP - Rooftop On-Grid Sizing Module</description>
+
+    <dependencies>
+
+        <!-- Shared utilities, Material catalog, Customer, exceptions -->
+        <dependency>
+            <groupId>com.solarerp</groupId>
+            <artifactId>solar-erp-common</artifactId>
+        </dependency>
+
+        <!-- Reuses SavedCostingEntity + CostingService so a sizing estimate
+             can be converted into a costing -->
+        <dependency>
+            <groupId>com.solarerp</groupId>
+            <artifactId>solar-erp-costing</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Lombok is provided by the parent POM; do not redeclare it. -->
+
+    </dependencies>
+
+</project>

@@ -2,9 +2,7 @@ package com.solarerp.material.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -20,8 +18,7 @@ public class Material {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "material_category")
+    @Column(nullable = false)
     private MaterialCategory category;
 
     @Column(name = "component_key", length = 50)
@@ -44,6 +41,19 @@ public class Material {
 
     @Column(name = "hsn_code", length = 20)
     private String hsnCode;
+
+    /**
+     * Current catalog price per {@link #unit} (e.g. per Wp, per Nos, per Mtr).
+     * Nullable: a material may exist in the catalog before a price is set.
+     */
+    @Column(name = "unit_price", precision = 12, scale = 2)
+    private BigDecimal unitPrice;
+
+    /**
+     * Applicable GST rate as a percentage (e.g. 5.00, 18.00).
+     */
+    @Column(name = "gst_rate", precision = 5, scale = 2)
+    private BigDecimal gstRate;
 
     @Column(nullable = false)
     private boolean active = true;

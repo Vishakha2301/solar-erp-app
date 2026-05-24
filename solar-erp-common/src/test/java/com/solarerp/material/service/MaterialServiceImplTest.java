@@ -66,7 +66,9 @@ class MaterialServiceImplTest {
                 "Mono/Bifacial, 18 panels",
                 "Wp",
                 "25 years performance",
-                "8541.40"
+                "8541.40",
+                null,
+                null
         );
     }
 

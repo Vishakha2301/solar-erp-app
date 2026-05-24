@@ -122,6 +122,8 @@ public class MaterialServiceImpl implements MaterialService {
         material.setUnit(request.unit());
         material.setWarranty(request.warranty());
         material.setHsnCode(request.hsnCode());
+        material.setUnitPrice(request.unitPrice());
+        material.setGstRate(request.gstRate());
     }
 
     private MaterialResponse toResponse(Material material) {
@@ -138,6 +140,8 @@ public class MaterialServiceImpl implements MaterialService {
                 material.getUnit(),
                 material.getWarranty(),
                 material.getHsnCode(),
+                material.getUnitPrice(),
+                material.getGstRate(),
                 material.isActive(),
                 material.getCreatedAt(),
                 material.getCreatedBy()

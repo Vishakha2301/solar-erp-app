@@ -1,8 +1,6 @@
 package com.solarerp.customer.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import lombok.*;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -21,8 +19,7 @@ public class Customer {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "customer_type", nullable = false, columnDefinition = "customer_type")
+    @Column(name = "customer_type", nullable = false)
     private CustomerType customerType;
 
     @Column(nullable = false, length = 255)

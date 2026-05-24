@@ -1,61 +1,36 @@
 package com.solarerp.quotation.service;
 
-import com.solarerp.costing.repository.CostingRepository;
-import com.solarerp.costing.service.CostingService;
-import com.solarerp.quotation.repository.QuotationRepository;
-import com.solarerp.quotation.service.impl.QuotationDocumentServiceImpl;
 import com.solarerp.quotation.utility.AmountToWordsConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("ConvertToWords Tests")
+@DisplayName("AmountToWordsConverter Tests")
 class ConvertToWordsTest {
 
-    @Mock
-    private QuotationRepository quotationRepository;
-
-    @Mock
-    private CostingRepository costingRepository;
-
-    @Mock
-    private CostingService costingService;
-
-    @Mock
     private AmountToWordsConverter converter;
-
-    private QuotationDocumentServiceImpl documentService;
-
 
     @BeforeEach
     void setUp() {
-        documentService = new QuotationDocumentServiceImpl(
-                quotationRepository,
-                costingRepository,
-                costingService,
-                converter);
+        converter = new AmountToWordsConverter();
     }
 
-    private String convertToWords(long number) {
+    private String convertIndian(long number) {
         return (String) ReflectionTestUtils.invokeMethod(
-                documentService, "convertToWords", number);
+                converter, "convertIndian", number);
     }
 
-    private String amountInWords(BigDecimal amount) {
+    private String convertTwoDigits(int number) {
         return (String) ReflectionTestUtils.invokeMethod(
-                documentService, "amountInWords", amount);
+                converter, "convertTwoDigits", number);
     }
 
     @Nested
@@ -63,9 +38,9 @@ class ConvertToWordsTest {
     class ZeroTests {
 
         @Test
-        @DisplayName("Zero returns 'Zero'")
-        void zero_returnsZero() {
-            assertThat(convertToWords(0)).isEqualTo("Zero");
+        @DisplayName("Zero returns empty string from convertIndian")
+        void zero_returnsEmpty() {
+            assertThat(convertIndian(0)).isEmpty();
         }
     }
 
@@ -96,7 +71,7 @@ class ConvertToWordsTest {
                 "19, Nineteen"
         })
         void ones_returnsCorrectWord(long number, String expected) {
-            assertThat(convertToWords(number)).isEqualTo(expected);
+            assertThat(convertIndian(number)).isEqualTo(expected);
         }
     }
 
@@ -124,7 +99,7 @@ class ConvertToWordsTest {
                 "99, Ninety Nine"
         })
         void tens_returnsCorrectWord(long number, String expected) {
-            assertThat(convertToWords(number)).isEqualTo(expected);
+            assertThat(convertIndian(number)).isEqualTo(expected);
         }
     }
 
@@ -146,7 +121,7 @@ class ConvertToWordsTest {
                 "999, Nine Hundred Ninety Nine"
         })
         void hundreds_returnsCorrectWord(long number, String expected) {
-            assertThat(convertToWords(number)).isEqualTo(expected);
+            assertThat(convertIndian(number)).isEqualTo(expected);
         }
     }
 
@@ -167,7 +142,7 @@ class ConvertToWordsTest {
                 "99999, Ninety Nine Thousand Nine Hundred Ninety Nine"
         })
         void thousands_returnsCorrectWord(long number, String expected) {
-            assertThat(convertToWords(number)).isEqualTo(expected);
+            assertThat(convertIndian(number)).isEqualTo(expected);
         }
     }
 
@@ -187,7 +162,7 @@ class ConvertToWordsTest {
                 "9999999, Ninety Nine Lakh Ninety Nine Thousand Nine Hundred Ninety Nine"
         })
         void lakhs_returnsCorrectWord(long number, String expected) {
-            assertThat(convertToWords(number)).isEqualTo(expected);
+            assertThat(convertIndian(number)).isEqualTo(expected);
         }
     }
 
@@ -206,7 +181,7 @@ class ConvertToWordsTest {
                 "250000000, Twenty Five Crore"
         })
         void crores_returnsCorrectWord(long number, String expected) {
-            assertThat(convertToWords(number)).isEqualTo(expected);
+            assertThat(convertIndian(number)).isEqualTo(expected);
         }
     }
 
@@ -217,63 +192,62 @@ class ConvertToWordsTest {
         @Test
         @DisplayName("254500 — typical landed cost")
         void typicalLandedCost() {
-            assertThat(convertToWords(254500))
+            assertThat(convertIndian(254500))
                     .isEqualTo("Two Lakh Fifty Four Thousand Five Hundred");
         }
 
         @Test
         @DisplayName("337500 — typical grand total")
         void typicalGrandTotal() {
-            assertThat(convertToWords(337500))
+            assertThat(convertIndian(337500))
                     .isEqualTo("Three Lakh Thirty Seven Thousand Five Hundred");
         }
 
         @Test
         @DisplayName("78000 — typical subsidy amount")
         void typicalSubsidyAmount() {
-            assertThat(convertToWords(78000))
+            assertThat(convertIndian(78000))
                     .isEqualTo("Seventy Eight Thousand");
         }
 
         @Test
         @DisplayName("1500000 — larger system cost")
         void largerSystemCost() {
-            assertThat(convertToWords(1500000))
+            assertThat(convertIndian(1500000))
                     .isEqualTo("Fifteen Lakh");
         }
     }
 
     @Nested
-    @DisplayName("amountInWords()")
-    class AmountInWordsTests {
+    @DisplayName("convert() — full amount with Rupees/Paise")
+    class ConvertTests {
 
         @Test
-        @DisplayName("Wraps in Rupees ... Only")
-        void amountInWords_wrapsCorrectly() {
-            assertThat(amountInWords(BigDecimal.valueOf(254500)))
-                    .isEqualTo(
-                            "Rupees Two Lakh Fifty Four Thousand Five Hundred Only");
+        @DisplayName("Formats typical landed cost")
+        void convert_typicalLandedCost() {
+            assertThat(converter.convert(BigDecimal.valueOf(254500)))
+                    .isEqualTo("Rupees Two Lakh Fifty Four Thousand Five Hundred Only");
         }
 
         @Test
-        @DisplayName("Returns empty string for null amount")
-        void amountInWords_nullAmount_returnsEmpty() {
-            assertThat(amountInWords(null)).isEmpty();
+        @DisplayName("Returns Zero Rupees Only for zero")
+        void convert_zeroAmount() {
+            assertThat(converter.convert(BigDecimal.ZERO))
+                    .isEqualTo("Zero Rupees Only");
         }
 
         @Test
-        @DisplayName("Handles zero amount")
-        void amountInWords_zeroAmount() {
-            assertThat(amountInWords(BigDecimal.ZERO))
-                    .isEqualTo("Rupees Zero Only");
+        @DisplayName("Throws IllegalArgumentException for null")
+        void convert_nullAmount_throwsIllegalArgument() {
+            assertThatThrownBy(() -> converter.convert(null))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
-        @DisplayName("Truncates decimal part")
-        void amountInWords_decimalAmount_truncatesDecimals() {
-            assertThat(amountInWords(BigDecimal.valueOf(254500.75)))
-                    .isEqualTo(
-                            "Rupees Two Lakh Fifty Four Thousand Five Hundred Only");
+        @DisplayName("Includes paise when decimal part is present")
+        void convert_withPaise() {
+            assertThat(converter.convert(BigDecimal.valueOf(254500.75)))
+                    .isEqualTo("Rupees Two Lakh Fifty Four Thousand Five Hundred and Seventy Five Paise Only");
         }
     }
 }

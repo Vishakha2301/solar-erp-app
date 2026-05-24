@@ -9,3 +9,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: test-secret-key-for-unit-tests-only-32b

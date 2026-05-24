@@ -1,6 +1,6 @@
 package com.solarerp.material.dto;
 
-import com.solarerp.material.entity.MaterialCategory;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -14,6 +14,8 @@ public record MaterialResponse(
         String unit,
         String warranty,
         String hsnCode,
+        BigDecimal unitPrice,
+        BigDecimal gstRate,
         boolean active,
         Instant createdAt,
         UUID createdBy

@@ -30,7 +30,7 @@ public class User {
 
     @Setter
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "user_role")
+    @Column(nullable = false)
     private UserRole role;
 
     @Setter

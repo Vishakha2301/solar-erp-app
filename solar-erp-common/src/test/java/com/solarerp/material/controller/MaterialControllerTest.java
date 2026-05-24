@@ -83,6 +83,8 @@ class MaterialControllerTest {
                 "Wp",
                 "25 years",
                 "8541.40",
+                null,
+                null,
                 true,
                 Instant.now(),
                 userId
@@ -96,7 +98,9 @@ class MaterialControllerTest {
                 "Mono/Bifacial, 18 panels",
                 "Wp",
                 "25 years",
-                "8541.40"
+                "8541.40",
+                null,
+                null
         );
     }
 
@@ -286,7 +290,7 @@ class MaterialControllerTest {
                     "solarPanel",
                     "",
                     "Model",
-                    null, null, null, null
+                    null, null, null, null, null, null
             );
 
             mockMvc.perform(post("/api/v1/materials")
@@ -304,7 +308,7 @@ class MaterialControllerTest {
                     "solarPanel",
                     "Adani",
                     "",
-                    null, null, null, null
+                    null, null, null, null, null, null
             );
 
             mockMvc.perform(post("/api/v1/materials")
@@ -322,7 +326,7 @@ class MaterialControllerTest {
                     "solarPanel",
                     "Adani",
                     "Model",
-                    null, null, null, null
+                    null, null, null, null, null, null
             );
 
             mockMvc.perform(post("/api/v1/materials")

@@ -31,6 +31,10 @@
             <groupId>com.solarerp</groupId>
             <artifactId>solar-erp-quotation</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.solarerp</groupId>
+            <artifactId>solar-erp-sizing</artifactId>
+        </dependency>
 
         <!-- Web -->
         <dependency>

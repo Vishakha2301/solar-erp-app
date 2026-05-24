@@ -1,0 +1,1138 @@
+{
+  "info": {
+    "name": "solar-erp",
+    "description": "Solar ERP API - Complete collection with Authentication, Costing, Customer, and Material endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "test",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "description": "",
+        "url": {
+          "raw": "http://localhost:8080/api/v1/test",
+          "protocol": "http",
+          "host": [
+            "localhost:8080"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "test"
+          ],
+          "query": [],
+          "variable": []
+        }
+      }
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('jwt_token', jsonData.token);",
+                  "    pm.environment.set('username', jsonData.username);",
+                  "    pm.environment.set('role', jsonData.role);",
+                  "    console.log('Token saved to environment');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"identifier\": \"admin\",\n    \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Costing",
+      "item": [
+        {
+          "name": "Get All",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "http://localhost:8080/api/v1/costings",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "costings"
+              ],
+              "query": [],
+              "variable": []
+            }
+          }
+        },
+        {
+          "name": "Save costing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "type": "default"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "http://localhost:8080/api/v1/costings",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "costings"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"context\": {\n        \"plantCapacity\": 10.0,\n        \"systemType\": \"Rooftop\",\n        \"phaseType\": \"3PH\",\n        \"roofType\": \"RCC\",\n        \"roofIdentifier\": \"Main Roof\",\n        \"isSubsidyProject\": false\n    },\n    \"snapshot\": {\n        \"components\": {\n            \"solarPanel\": {\n                \"type\": \"panelCapacityBased\",\n                \"quantity\": 24.0,\n                \"unitPrice\": 22.0,\n                \"unit\": \"Wp\",\n                \"panelCapacityWp\": 545.0\n            }\n        }\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer API",
+      "item": [
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers/{{customer_id}}",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "{{customer_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers/search?name=John",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "John"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Customer (Individual)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('customer_id', jsonData.id);",
+                  "    console.log('Customer ID saved: ' + jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerType\": \"INDIVIDUAL\",\n  \"name\": \"John Doe\",\n  \"phone\": \"+91-9876543210\",\n  \"email\": \"john@example.com\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400001\",\n  \"gstNumber\": \"27AABCT1234A1Z0\",\n  \"sites\": [\n    {\n      \"siteLabel\": \"Residence\",\n      \"address\": \"123 Main Street\",\n      \"city\": \"Mumbai\",\n      \"state\": \"Maharashtra\",\n      \"pincode\": \"400001\",\n      \"isDefault\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Customer (Company)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('company_customer_id', jsonData.id);",
+                  "    console.log('Company Customer ID saved: ' + jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerType\": \"COMPANY\",\n  \"name\": \"Solar Solutions Ltd\",\n  \"companyName\": \"Solar Solutions Ltd\",\n  \"phone\": \"+91-2240123456\",\n  \"email\": \"info@solarsolutions.com\",\n  \"address\": \"Corporate Office, Mumbai\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400001\",\n  \"gstNumber\": \"27AABCS1234A1Z0\",\n  \"sites\": [\n    {\n      \"siteLabel\": \"Head Office\",\n      \"address\": \"Corporate Office, Mumbai\",\n      \"city\": \"Mumbai\",\n      \"state\": \"Maharashtra\",\n      \"pincode\": \"400001\",\n      \"isDefault\": true\n    },\n    {\n      \"siteLabel\": \"Branch Office\",\n      \"address\": \"Branch Office, Pune\",\n      \"city\": \"Pune\",\n      \"state\": \"Maharashtra\",\n      \"pincode\": \"411001\",\n      \"isDefault\": false\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Customer (Society)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerType\": \"SOCIETY\",\n  \"name\": \"Green Valley Housing Society\",\n  \"companyName\": \"Green Valley Housing Society\",\n  \"phone\": \"+91-2234567890\",\n  \"email\": \"admin@greenvalley.com\",\n  \"address\": \"Society Complex, Thane\",\n  \"city\": \"Thane\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400605\",\n  \"gstNumber\": \"27AABCS5678B1Z0\",\n  \"sites\": [\n    {\n      \"siteLabel\": \"Main Society Building\",\n      \"address\": \"Building A, Green Valley\",\n      \"city\": \"Thane\",\n      \"state\": \"Maharashtra\",\n      \"pincode\": \"400605\",\n      \"isDefault\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerType\": \"INDIVIDUAL\",\n  \"name\": \"John Doe Updated\",\n  \"phone\": \"+91-9876543210\",\n  \"email\": \"john.updated@example.com\",\n  \"address\": \"456 Updated Street\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400002\",\n  \"gstNumber\": \"27AABCT1234A1Z0\",\n  \"sites\": []\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers/{{customer_id}}",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "{{customer_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Customer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/customers/{{customer_id}}",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "{{customer_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Material API",
+      "item": [
+        {
+          "name": "Get All Materials",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Material by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/{{material_id}}",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials",
+                "{{material_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Material Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/categories",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Materials by Category (PANEL)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/category/PANEL",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials",
+                "category",
+                "PANEL"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Materials by Category (INVERTER)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/category/INVERTER",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials",
+                "category",
+                "INVERTER"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Materials by Component Key",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/component/ROOF_MOUNTED",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials",
+                "component",
+                "ROOF_MOUNTED"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Materials",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/search?brandName=Luminous",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "brandName",
+                  "value": "Luminous"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Material (Solar Panel)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('material_id', jsonData.id);",
+                  "    console.log('Material ID saved: ' + jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"PANEL\",\n  \"componentKey\": \"ROOF_MOUNTED\",\n  \"brandName\": \"Luminous\",\n  \"modelName\": \"LSQUARE-550\",\n  \"specification\": \"550W Monocrystalline Solar Panel\",\n  \"unit\": \"Piece\",\n  \"warranty\": \"25 Years\",\n  \"hsnCode\": \"8541.40\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Material (Inverter)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"INVERTER\",\n  \"componentKey\": \"GRID_TIED\",\n  \"brandName\": \"ABB\",\n  \"modelName\": \"UNO-3.3-TL-OUTD\",\n  \"specification\": \"3.3 kW Grid Tied Inverter\",\n  \"unit\": \"Piece\",\n  \"warranty\": \"10 Years\",\n  \"hsnCode\": \"8504.40\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Material (Cable)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"CABLE\",\n  \"componentKey\": \"SOLAR_CABLE\",\n  \"brandName\": \"Havells\",\n  \"modelName\": \"PV Rated Cable 4MM\",\n  \"specification\": \"4mm\u00c2\u00b2 DC Solar Cable\",\n  \"unit\": \"Meter\",\n  \"warranty\": \"5 Years\",\n  \"hsnCode\": \"8544.30\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Material (Structure)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"STRUCTURE\",\n  \"componentKey\": \"ROOF_MOUNTING\",\n  \"brandName\": \"Sigma\",\n  \"modelName\": \"Roof Mount Kit\",\n  \"specification\": \"Aluminum Roof Mounting Structure for 4 Panels\",\n  \"unit\": \"Kit\",\n  \"warranty\": \"10 Years\",\n  \"hsnCode\": \"7308.90\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Material (Electrical)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"ELECTRICAL\",\n  \"componentKey\": \"DC_BREAKER\",\n  \"brandName\": \"Siemens\",\n  \"modelName\": \"DC Breaker 2P 32A\",\n  \"specification\": \"2-Pole DC Breaker 32A\",\n  \"unit\": \"Piece\",\n  \"warranty\": \"5 Years\",\n  \"hsnCode\": \"8536.50\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Material",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"PANEL\",\n  \"componentKey\": \"ROOF_MOUNTED\",\n  \"brandName\": \"Luminous\",\n  \"modelName\": \"LSQUARE-550\",\n  \"specification\": \"550W Monocrystalline Solar Panel - Updated\",\n  \"unit\": \"Piece\",\n  \"warranty\": \"25 Years\",\n  \"hsnCode\": \"8541.40\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/{{material_id}}",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials",
+                "{{material_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Material",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/materials/{{material_id}}",
+              "protocol": "http",
+              "host": [
+                "localhost:8080"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "materials"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sizing API",
+      "item": [
+        {
+          "name": "Get All Sizing Estimates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sizing/estimates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sizing",
+                "estimates"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Sizing Estimate by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sizing/estimates/{{sizing_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sizing",
+                "estimates",
+                "{{sizing_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Estimates by Customer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sizing/estimates/customer/{{customer_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sizing",
+                "estimates",
+                "customer",
+                "{{customer_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Sizing Estimate (Known Average)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"sizing_id\", jsonData.id);",
+                  "    console.log(\"Sizing ID saved: \" + jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customer_id}}\",\n  \"state\": \"Rajasthan\",\n  \"availableRoofAreaSqm\": 100,\n  \"panelWattageWp\": 550,\n  \"connectionType\": \"RESIDENTIAL\",\n  \"phaseType\": \"SINGLE\",\n  \"knownMonthlyAverageKwh\": 350,\n  \"growthBufferPercent\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/sizing/estimates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sizing",
+                "estimates"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Sizing Estimate (Monthly Readings)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customer_id}}\",\n  \"state\": \"Gujarat\",\n  \"availableRoofAreaSqm\": 150,\n  \"panelWattageWp\": 550,\n  \"connectionType\": \"COMMERCIAL\",\n  \"phaseType\": \"THREE\",\n  \"monthlyConsumptionReadingsKwh\": [\n    400,\n    420,\n    380,\n    350,\n    300,\n    280,\n    290,\n    310,\n    360,\n    410,\n    430,\n    390\n  ],\n  \"growthBufferPercent\": 15\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/sizing/estimates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sizing",
+                "estimates"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Convert Estimate to Costing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"costing_id\", jsonData.costingId);",
+                  "    console.log(\"Costing ID saved: \" + jsonData.costingId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sizing/estimates/{{sizing_id}}/costing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sizing",
+                "estimates",
+                "{{sizing_id}}",
+                "costing"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Sizing Estimate",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sizing/estimates/{{sizing_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sizing",
+                "estimates",
+                "{{sizing_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customer_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "company_customer_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "material_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "role",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sizing_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
